@@ -83,26 +83,31 @@ sap.ui.define(
         // example with react component
         const valueContainerId = "tree-value";
          const oContext = oEvent.getSource().getBindingContext();
-        var dialog = new Dialog({
+        
+        const currentValue = oContext.getObject().formula;
+
+         var dialog = new Dialog({
           contentWidth: "1000px",
           contentHeight: "600px",
           title: "Select values",
           type: "Message",
           content: new sap.ui.core.HTML({
-            content: `<div id="root"></div><input value="" type="hidden" id="${valueContainerId}" />`,
+            content: `<div id="root" class="${window.theme || 'horizon'}"></div><input value="" type="hidden" id="${valueContainerId}" />`,
           }),
           afterOpen: function () {
             const tree = new Tree();
             const treeContainer = document.getElementById("root");
             const valueContainer = document.getElementById(valueContainerId);
-            tree.render(treeContainer, valueContainer);
+            tree.render(treeContainer, valueContainer, currentValue);
           },
           beginButton: new Button({
             text: "Submit",
             press: function () {
               const valueContainer = document.getElementById(valueContainerId);
               const value = valueContainer.getAttribute("value");
-              MessageToast.show(`Selected value: ${value}`);
+              // MessageToast.show(`Selected value: ${value}`);
+              // const parsedValue = JSON.parse(value);
+              // const displayValue = parsedValue.map(item => `${item.OP} ${item.LOW}`).join('; ');
               oContext.setProperty('formula', value);
  
               dialog.close();

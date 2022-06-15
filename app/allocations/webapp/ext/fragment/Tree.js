@@ -6,7 +6,7 @@ sap.ui.define(
    */ function (BaseObject) {
     const Tree = BaseObject.extend("allocations.ext.fragment.Tree", {
       constructor: function () {},
-      render: function (domContainer, valueContainer) {
+      render: function (domContainer, valueContainer, value) {
         const e = React.createElement;
 
         const rootNodes = [
@@ -74,19 +74,20 @@ sap.ui.define(
               })
             );
           }
-     
-          content.push(
-            e("input", {
-              type: "checkbox",
-              value: node.value,
-              checked: selected,
-              onChange: onChangeSelection,
-            })
-          );
-     
-          content.push(e("span", null, node.label));
+       
+          content.push(e('label', null, e("div", {
+            role: "checkbox",
+            class: "sapMCb sapMLIBSelectM"
+          }, e("div", {
+            class: `sapMCbBg sapMCbHoverable sapMCbActiveStateOff sapMCbMark ${selected ? 'sapMCbMarkChecked' : ''}`
+          }, e("input", {
+            type: "CheckBox",
+            value: node.value,
+            checked: selected,
+            onChange: onChangeSelection,
+          })), e("span", null, node.label))));
 
-          return e("label", null, ...content);
+          return content;
         };
 
         const Tree = () => {
@@ -107,6 +108,11 @@ sap.ui.define(
           };
 
           React.useEffect(() => {
+            const currentValue = value ? JSON.parse(value) : [];
+            setSelectedValues(currentValue.map(item => item.LOW));
+            
+            // setOperatorFor();
+
             setTimeout(() => {
               setLoading(false);
               setTopNodes(rootNodes);
@@ -160,7 +166,7 @@ sap.ui.define(
                 e(
                   "li",
                   { key: node.value },
-                  e(TreeItem, {
+                  e('div', null, e(TreeItem, {
                     node,
                     onChangeSelection,
                     onExpand,
@@ -168,7 +174,7 @@ sap.ui.define(
                     selected: selectedValues.includes(node.value),
                   }),
                   renderNodes(childrenFor[node.value])
-                )
+                ))
               )
             );
 
