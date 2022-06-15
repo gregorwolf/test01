@@ -82,7 +82,7 @@ sap.ui.define(
       onPress2: function (oEvent) {
         // example with react component
         const valueContainerId = "tree-value";
-       
+         const oContext = oEvent.getSource().getBindingContext();
         var dialog = new Dialog({
           contentWidth: "1000px",
           contentHeight: "600px",
@@ -102,18 +102,9 @@ sap.ui.define(
             press: function () {
               const valueContainer = document.getElementById(valueContainerId);
               const value = valueContainer.getAttribute("value");
-
               MessageToast.show(`Selected value: ${value}`);
-
-              // TODO: update relevant json model
-
-              var oModel = oEvent.getSource().getModel();
-              console.log(oEvent.getSource());
-              // oModel.setProperty("Selections", value);
-              
-              //oInput = this.byId("productInput");
-
-     
+              oContext.setProperty('formula', value);
+ 
               dialog.close();
             },
           }),
