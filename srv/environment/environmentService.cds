@@ -2,7 +2,7 @@ using {
     Environments as environments,
                     Environment,
                     Description
-} from '../db/environments';
+} from '../../db/environments';
 
 @path : 'service/environment'
 service EnvironmentService {

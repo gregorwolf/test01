@@ -1,4 +1,4 @@
-using EnvironmentService as service from '../../srv/environmentService';
+using EnvironmentService as service from '../../srv/environment/environmentService';
 using from '../../db/environments';
 
 annotate service.Environments with @(UI.LineItem : [

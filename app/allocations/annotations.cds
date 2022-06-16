@@ -1,4 +1,4 @@
-using ModelingService as service from '../../srv/modelingService';
+using ModelingService as service from '../../srv/modeling/modelingService';
 using from '../../db/allocations';
 using from '../../db/functions';
 using from '../../db/commonTypes';
