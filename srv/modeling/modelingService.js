@@ -1,4 +1,4 @@
-const cds = require("@sap/cds");
+// const cds = require("@sap/cds");
 const activationService = require("./activationService");
 const functionService = require("./functionService");
 
@@ -10,14 +10,15 @@ module.exports = function () {
     await functionService.onCreate(req);
     return next();
   });
-  this.before("*", async (req) => {
-    if (cds) {
-      if (req.target.elements.environment_ID) console.log(req.target.elements.environment_ID);
-    }
-  });
+  // this.before("*", async (req) => {
+  //   if (cds) {
+  //     if (req.target.elements.environment_ID) console.log(req.target.elements.environment_ID);
+  //   }
+  // });
   this.before("NEW", "*", async (req) => {
     if (cds) {
       // if (req.target.elements.environment_ID) req.data.environment_ID = "1";
+      // if (req.target.elements.environment_ID) req.data.environment_ID = req.user.id;
       // if (req.target.elements.function_ID) req.data.function_ID = "4";
       // if (req.target.elements.sequence) req.data.sequence = 10;
     }
@@ -34,6 +35,15 @@ module.exports = function () {
   //     console.log(req.query.SELECT.where);
   //   }
   // });
+  this.before("DELETE", "Allocations", async (req) => {
+    console.log(req.data);
+  })
+  this.on("DELETE", "Allocations", async (req) => {
+    console.log(req.data);
+  })
+  this.after(["CREATE","UPDATE"], "Allocations", async (req) => {
+    console.log(req.data);
+  });
   this.after("READ", "Functions", (each) => {
     if (each.IsActiveEntity) {
       switch (each.type_code) {

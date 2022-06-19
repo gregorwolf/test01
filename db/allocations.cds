@@ -46,32 +46,36 @@ using {
 } from './commonEntities';
 
 entity Allocations : managed, function {
-    key ID                      : GUID                                              @Common.Text : function.description  @Common.TextArrangement : #TextOnly;
-        type                    : Association to one AllocationTypes                @title       : 'Type';
-        valueAdjustment         : Association to one AllocationValueAdjustments     @title       : 'Value Adjustment';
+    key ID                      : GUID                                                 @Common.Text : function.description  @Common.TextArrangement       : #TextOnly;
+        type                    : Association to one AllocationTypes                   @title       : 'Type';
+        valueAdjustment         : Association to one AllocationValueAdjustments        @title       : 'Value Adjustment';
         includeInputData        : IncludeInputData default false;
-        resultHandling          : Association to one ResultHandlings                @title       : 'Result Handling';
+        resultHandling          : Association to one ResultHandlings                   @title       : 'Result Handling';
         includeInitialResult    : IncludeInitialResult default false;
         cycleFlag               : CycleFlag default false;
         cycleMaximum            : CycleMaximum default '';
-        cycleIterationField     : Association to one AllocationCycleIterationFields @title       : 'Cycle Iteration Field';
-        cycleAggregation        : Association to one AllocationCycleAggregations    @title       : 'Cycle Aggregation';
+        cycleIterationField     : Association to one AllocationCycleIterationFields    @title       : 'Cycle Iteration Field';
+        cycleAggregation        : Association to one AllocationCycleAggregations       @title       : 'Cycle Aggregation';
         termFlag                : TermFlag default false;
-        termIterationField      : Association to one AllocationTermIterationFields  @title       : 'Term Iteration Field';
-        termYearField           : Association to one AllocationTermYearFields       @title       : 'Term Year Field';
-        termField               : Association to one AllocationTermFields           @title       : 'Term Field';
-        termProcessing          : Association to one AllocationTermProcessings      @title       : 'Term Processing';
+        termIterationField      : Association to one AllocationTermIterationFields     @title       : 'Term Iteration Field';
+        termYearField           : Association to one AllocationTermYearFields          @title       : 'Term Year Field';
+        termField               : Association to one AllocationTermFields              @title       : 'Term Field';
+        termProcessing          : Association to one AllocationTermProcessings         @title       : 'Term Processing';
         termYear                : TermYear;
         termMinimum             : TermMinimum;
         termMaximum             : TermMaximum;
-        senderFunction          : Association to one AllocationInputFunctions       @title       : 'Sender Input';
+        senderFunction_ID       : GUID                                                 @Common.Text : senderFunction.description  @Common.TextArrangement : #TextOnly;
+        senderFunction          : Association to one Functions
+                                      on  senderFunction.environment.ID =  environment.ID
+                                      and senderFunction.ID             =  senderFunction_ID
+                                      and senderFunction.ID             <> function.ID @title       : 'Sender Input';
         senderViews             : Composition of many AllocationSenderViews
-                                      on senderViews.allocation = $self             @title       : 'Sender View';
-        receiverFunction        : Association to one AllocationInputFunctions       @title       : 'Receiver Input';
+                                      on senderViews.allocation = $self                @title       : 'Sender View';
+        receiverFunction        : Association to one AllocationInputFunctions          @title       : 'Receiver Input';
         receiverViews           : Composition of many AllocationReceiverViews
-                                      on receiverViews.allocation = $self           @title       : 'Receiver View';
-        resultFunction          : Association to one AllocationResultFunctions      @title       : 'Result Model Table';
-        earlyExitCheck          : Association to one AllocationEarlyExitChecks      @title       : 'Early Exit Check';
+                                      on receiverViews.allocation = $self              @title       : 'Receiver View';
+        resultFunction          : Association to one AllocationResultFunctions         @title       : 'Result Model Table';
+        earlyExitCheck          : Association to one AllocationEarlyExitChecks         @title       : 'Early Exit Check';
         selectionFields         : Composition of many AllocationSelectionFields
                                       on selectionFields.allocation = $self;
         actionFields            : Composition of many AllocationActionFields
@@ -94,6 +98,7 @@ entity Allocations : managed, function {
 @cds.odata.valuelist
 entity AllocationInputFunctions         as projection on Functions as F {
     ID,
+    environment.ID as environment_ID,
     function,
     description,
     type
@@ -390,7 +395,7 @@ entity AllocationRuleDriverResultFields as projection on Fields as F where(
     and ID         in (
             select field.ID from AllocationActionFields as L
             where
-                F.environment.ID = L.allocation.environment.ID
+                F.environment.ID = L.allocation.function.environment.ID
         )
     );
 
@@ -403,6 +408,6 @@ entity AllocationCycleIterationFields   as projection on Fields as F where(
     and ID         in (
             select field.ID from AllocationActionFields as L
             where
-                F.environment.ID = L.allocation.environment.ID
+                F.environment.ID = L.allocation.function.environment.ID
         )
     );

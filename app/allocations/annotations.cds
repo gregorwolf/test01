@@ -294,35 +294,6 @@ annotate service.Allocations with {
     function @Common.Text : function.description
 };
 
-annotate service.Allocations with {
-    senderFunction @(
-        Common.ValueList                : {
-            $Type          : 'Common.ValueListType',
-            CollectionPath : 'AllocationInputFunctions',
-            Parameters     : [
-                {
-                    $Type             : 'Common.ValueListParameterInOut',
-                    LocalDataProperty : senderFunction_ID,
-                    ValueListProperty : 'ID',
-                },
-                {
-                    $Type             : 'Common.ValueListParameterDisplayOnly',
-                    ValueListProperty : 'function',
-                },
-                {
-                    $Type             : 'Common.ValueListParameterDisplayOnly',
-                    ValueListProperty : 'description',
-                },
-            ],
-        },
-        Common.ValueListWithFixedValues : false
-    )
-};
-
-annotate service.Allocations with {
-    senderFunction @Common.Text : senderFunction.description
-};
-
 annotate service.Allocations with @(UI.FieldGroup #AdvancedTerm : {
     $Type : 'UI.FieldGroupType',
     Data  : [
@@ -1138,3 +1109,28 @@ annotate service.Allocations with @(
         function_ID,
     ]
 );
+annotate service.AllocationInputFunctions with {
+    function @Common.Text : {
+        $value : description,
+        ![@UI.TextArrangement] : #TextOnly,
+    }
+};
+annotate service.Allocations with {
+    senderFunction_ID @(Common.ValueList : {
+            $Type : 'Common.ValueListType',
+            CollectionPath : 'Functions',
+            Parameters : [
+                {
+                    $Type : 'Common.ValueListParameterIn',
+                    LocalDataProperty : environment.ID,
+                    ValueListProperty : 'environment_ID',
+                },
+                {
+                    $Type : 'Common.ValueListParameterInOut',
+                    LocalDataProperty : senderFunction_ID,
+                    ValueListProperty : 'ID',
+                },
+            ],
+        },
+        Common.ValueListWithFixedValues : true
+)};

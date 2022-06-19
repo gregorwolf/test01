@@ -96,11 +96,7 @@
               "title": "Environments",
               "signature": {
                 "parameters": {
-                  "parent_ID": {
-                    "defaultValue": {
-                      "value": ""
-                    }
-                  }
+                  "parent_ID": {}
                 },
                 "additionalParameters": "ignored"
               },

@@ -60,18 +60,6 @@ annotate service.Environments with @(UI.LineItem : [
         }, ],
         ![@UI.Importance]   : #High,
     },
-// {
-//     $Type          : 'UI.DataFieldForIntentBasedNavigation',
-//     SemanticObject : 'Functions',
-//     Action         : 'manage',
-//     Label          : 'Go to Functions',
-//     Mapping        : [{
-//         $Type                  : 'Common.SemanticObjectMappingType',
-//         LocalProperty          : ID,
-//         SemanticObjectProperty : 'environment_ID',
-//     }, ],
-// },
-
 ]);
 
 annotate service.Environments with @(
@@ -116,7 +104,17 @@ annotate service.Environments with {
     type;
 };
 
-annotate service.Environments with @(UI.SelectionFields : [parent_ID, ]);
+annotate service.Environments with @(
+    UI.SelectionFields              : [parent_ID, ],
+    Capabilities.FilterRestrictions : {
+        $Type                        : 'Capabilities.FilterRestrictionsType',
+        FilterExpressionRestrictions : [{
+            $Type              : 'Capabilities.FilterExpressionRestrictionType',
+            Property           : parent_ID,
+            AllowedExpressions : 'SingleValue',
+        }, ],
+    },
+);
 
 annotate service.Environments with {
     parent @Common.Text : {
@@ -148,13 +146,6 @@ annotate service.EnvironmentTypes with {
 };
 
 annotate service.Environments with {
-    parent_ID @Common.Text : {
-        $value                 : parent.description,
-        ![@UI.TextArrangement] : #TextOnly,
-    }
-};
-
-annotate service.Environments with {
     parent @(
         Common.ValueList                : {
             $Type          : 'Common.ValueListType',
@@ -175,35 +166,7 @@ annotate service.Environments with {
                 },
             ],
         },
-        Common.ValueListWithFixedValues : false
-    )
-};
-
-annotate service.Environments with {
-    parent_ID @(
-        Common.ValueList                : {
-            $Type          : 'Common.ValueListType',
-            CollectionPath : 'EnvironmentFolders',
-            Parameters     : [
-                {
-                    $Type             : 'Common.ValueListParameterInOut',
-                    LocalDataProperty : parent_ID,
-                    ValueListProperty : 'ID',
-                },
-                {
-                    $Type             : 'Common.ValueListParameterDisplayOnly',
-                    ValueListProperty : 'environment',
-                },
-                {
-                    $Type             : 'Common.ValueListParameterDisplayOnly',
-                    ValueListProperty : 'version',
-                },
-                {
-                    $Type             : 'Common.ValueListParameterDisplayOnly',
-                    ValueListProperty : 'description',
-                },
-            ],
-        },
-        Common.ValueListWithFixedValues : true
+        Common.ValueListWithFixedValues : true,
+        Common.FilterDefaultValue       : {$value : ''}
     )
 };

@@ -8,10 +8,13 @@ module.exports = function () {
   this.on("createFolder", async (req) => {
     await createFolder(req);
   });
+  this.before("READ", "Environments", (req) => {
+    console.log(req._queryOptions);
+  });
   this.after("READ", "Environments", (each, req) => {
     enrichEnvironments(each, req);
   });
-  this.before(["PATCH", "SAVE"], "Environments", (req) => {
+  this.before(["PATCH","SAVE"], "Environments", (req) => {
     const textBundle = new textbundle.TextBundle("i18n/messages", req.user.locale);
     checkParentId(req.data, textBundle, req);
     checkVersion(req.data, textBundle, req);
@@ -43,9 +46,6 @@ function checkParentId(results, textBundle, req) {
       const text = textBundle.getText("ENVID_OWN_PARENT", [data.ID, data.parent_ID]);
       LOG.error(text);
       req.error(500, "ENVID_OWN_PARENT", "parent_ID", [data.ID, data.parent_ID]);
-      // throw new Error("Some error happened", "parent_ID", [data.ID, data.parent_ID]);
-      // req.reject(418, error, [data.ID, data.parent_ID], "parent_ID");
-      // throw new Error("Some error happened", { cause: error });
     }
   });
 }
@@ -63,7 +63,7 @@ function checkVersion(results, textBundle, req) {
         const LOG = cds.log("PAPM");
         const text = textBundle.getText("VERSION_NOT_NULL");
         LOG.error(text);
-        req.error(500, text, "version", [data.version]);
+        req.error(500, "VERSION_NOT_NULL", "version", [data.version]);
       }
     }
   });

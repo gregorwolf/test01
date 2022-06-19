@@ -35,19 +35,19 @@ using {Checks} from './checks';
 
 // @cds.persistence.journal // Enable schema evolution for all environment configuration tables
 aspect environment : {
-  environment : Association to one Environments @title : 'Environment' ;
+  environment : Association to one Environments @title : 'Environment' @mandatory;
 }
 
-aspect function : environment {
-  function : Association to one Functions @title : 'Function';
+aspect function : environment{
+  function : Association to one Functions @title : 'Function' @mandatory;
 }
 
-aspect field : environment {
-  field : Association to one Fields;
+aspect field : environment{
+  field : Association to one Fields @mandatory;
 }
 
-aspect check : environment {
-  check : Association to one Checks;
+aspect check : environment{
+  check : Association to one Checks @mandatory;
 }
 
 aspect formula {

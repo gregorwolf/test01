@@ -53,10 +53,10 @@ entity Functions : managed, environment {
         parentCalculationUnit : Association to one FunctionParentCalculationUnits @title       : 'Parent Calculation Unit';
         description           : Description;
         documentation         : Documentation;
-        allocation            : Association to one Allocations;
-        calculationUnit       : Association to one CalculationUnits;
+        // allocation            : Association to one Allocations;
+        // calculationUnit       : Association to one CalculationUnits;
         //  Description           : Association to one Descriptions;
-        modelTable            : Association to one ModelTables;
+        // modelTable            : Association to one ModelTables;
         virtual url           : String;
         virtual isUrlHidden   : Boolean;
 }
