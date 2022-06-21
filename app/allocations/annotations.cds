@@ -76,8 +76,8 @@ annotate service.Allocations with @(
                 {
                     $Type  : 'UI.ReferenceFacet',
                     Label  : 'Receiver Action Fields',
-                    ID     : 'ReceieverActionFields',
-                    Target : 'receiverActionFields/@UI.LineItem#ReceieverActionFields',
+                    ID     : 'ReceiverActionFields',
+                    Target : 'receiverActionFields/@UI.LineItem#ReceiverActionFields',
                 },
             ],
         },
@@ -205,6 +205,35 @@ annotate service.Allocations with @(UI.FieldGroup #Input : {
     }, ],
 });
 
+annotate service.Allocations with {
+    senderFunction @(
+        Common.ValueList                : {
+            $Type          : 'Common.ValueListType',
+            CollectionPath : 'Functions',
+            Parameters     : [
+                {
+                    $Type             : 'Common.ValueListParameterIn',
+                    LocalDataProperty : environment_ID,
+                    ValueListProperty : 'environment_ID',
+                },
+                {
+                    $Type             : 'Common.ValueListParameterInOut',
+                    LocalDataProperty : senderFunction_ID,
+                    ValueListProperty : 'ID',
+                },
+                {
+                    $Type             : 'Common.ValueListParameterDisplayOnly',
+                    ValueListProperty : 'function',
+                },
+                {
+                    $Type             : 'Common.ValueListParameterDisplayOnly',
+                    ValueListProperty : 'description',
+                },
+            ],
+        },
+        Common.ValueListWithFixedValues : false
+    )
+};
 annotate service.Allocations with {
     type @Common.Text : type.name
 };
@@ -357,6 +386,7 @@ annotate service.Allocations with @(UI.FieldGroup #AdvancedCycle : {
 
 });
 
+
 annotate service.Allocations with @(UI.FieldGroup #Input1 : {
     $Type : 'UI.FieldGroupType',
     Data  : [{
@@ -369,8 +399,13 @@ annotate service.Allocations with {
     receiverFunction @(
         Common.ValueList                : {
             $Type          : 'Common.ValueListType',
-            CollectionPath : 'AllocationInputFunctions',
+            CollectionPath : 'Functions',
             Parameters     : [
+                {
+                    $Type             : 'Common.ValueListParameterIn',
+                    LocalDataProperty : environment_ID,
+                    ValueListProperty : 'environment_ID',
+                },
                 {
                     $Type             : 'Common.ValueListParameterInOut',
                     LocalDataProperty : receiverFunction_ID,
@@ -493,7 +528,7 @@ annotate service.Allocations with @(UI.FieldGroup #ReceiverActionFields : {
     Data  : [],
 });
 
-annotate service.AllocationReceiverActionFields with @(UI.LineItem #ReceieverActionFields : [{
+annotate service.AllocationReceiverActionFields with @(UI.LineItem #ReceiverActionFields : [{
     $Type : 'UI.DataField',
     Value : field_ID,
 }, ]);
@@ -629,128 +664,6 @@ annotate service.AllocationReceiverViews with {
     order @Common.Text : order.name
 };
 
-annotate service.AllocationSenderViews with @(
-    UI.Facets                         : [
-        {
-            $Type  : 'UI.ReferenceFacet',
-            Label  : 'General Information',
-            ID     : 'GeneralInformation',
-            Target : '@UI.FieldGroup#GeneralInformation',
-        },
-        {
-            $Type  : 'UI.ReferenceFacet',
-            Label  : 'Selections',
-            ID     : 'Selections',
-            Target : 'selections/@UI.LineItem#Selections',
-        },
-    ],
-    UI.FieldGroup #GeneralInformation : {
-        $Type : 'UI.FieldGroupType',
-        Data  : [
-            {
-                $Type : 'UI.DataField',
-                Value : field_ID,
-            },
-            {
-                $Type : 'UI.DataField',
-                Value : formula,
-            },
-            {
-                $Type : 'UI.DataField',
-                Value : order_code,
-            },
-        ],
-    }
-);
-
-annotate service.AllocationSenderViewSelections with @(UI.LineItem #Selections : [
-    {
-        $Type : 'UI.DataField',
-        Value : sign_code,
-    },
-    {
-        $Type : 'UI.DataField',
-        Value : opt_code,
-    },
-    {
-        $Type : 'UI.DataField',
-        Value : low,
-    },
-    {
-        $Type : 'UI.DataField',
-        Value : high,
-    },
-]);
-
-annotate service.AllocationSenderViewSelections with {
-    sign @Common.Text : sign.name
-};
-
-annotate service.AllocationSenderViewSelections with {
-    opt @Common.Text : opt.name
-};
-
-annotate service.AllocationReceiverViews with @(
-    UI.Facets                         : [
-        {
-            $Type  : 'UI.ReferenceFacet',
-            Label  : 'General Information',
-            ID     : 'GeneralInformation',
-            Target : '@UI.FieldGroup#GeneralInformation',
-        },
-        {
-            $Type  : 'UI.ReferenceFacet',
-            Label  : 'Selections',
-            ID     : 'Selections',
-            Target : 'selections/@UI.LineItem#Selections',
-        },
-    ],
-    UI.FieldGroup #GeneralInformation : {
-        $Type : 'UI.FieldGroupType',
-        Data  : [
-            {
-                $Type : 'UI.DataField',
-                Value : field_ID,
-            },
-            {
-                $Type : 'UI.DataField',
-                Value : formula,
-            },
-            {
-                $Type : 'UI.DataField',
-                Value : order_code,
-            },
-        ],
-    }
-);
-
-annotate service.AllocationReceiverViewSelections with @(UI.LineItem #Selections : [
-    {
-        $Type : 'UI.DataField',
-        Value : sign_code,
-    },
-    {
-        $Type : 'UI.DataField',
-        Value : opt_code,
-    },
-    {
-        $Type : 'UI.DataField',
-        Value : low,
-    },
-    {
-        $Type : 'UI.DataField',
-        Value : high,
-    },
-]);
-
-annotate service.AllocationReceiverViewSelections with {
-    sign @Common.Text : sign.name
-};
-
-annotate service.AllocationReceiverViewSelections with {
-    opt @Common.Text : opt.name
-};
-
 annotate service.AllocationInputFunctions with {
     ID @Common.Text : description
 };
@@ -761,6 +674,11 @@ annotate service.AllocationSenderViews with {
             $Type          : 'Common.ValueListType',
             CollectionPath : 'Fields',
             Parameters     : [
+                {
+                    $Type             : 'Common.ValueListParameterIn',
+                    LocalDataProperty : environment.ID,
+                    ValueListProperty : 'environment_ID',
+                },
                 {
                     $Type             : 'Common.ValueListParameterInOut',
                     LocalDataProperty : field_ID,
@@ -788,12 +706,21 @@ annotate service.Allocations with {
     receiverFunction @Common.Text : receiverFunction.description
 };
 
+annotate service.Allocations with {
+    senderFunction @Common.Text : senderFunction.description
+};
+
 annotate service.AllocationReceiverViews with {
     field @(
         Common.ValueList                : {
             $Type          : 'Common.ValueListType',
             CollectionPath : 'Fields',
             Parameters     : [
+                {
+                    $Type             : 'Common.ValueListParameterIn',
+                    LocalDataProperty : environment.ID,
+                    ValueListProperty : 'environment_ID',
+                },
                 {
                     $Type             : 'Common.ValueListParameterInOut',
                     LocalDataProperty : field_ID,
@@ -1115,22 +1042,3 @@ annotate service.AllocationInputFunctions with {
         ![@UI.TextArrangement] : #TextOnly,
     }
 };
-annotate service.Allocations with {
-    senderFunction_ID @(Common.ValueList : {
-            $Type : 'Common.ValueListType',
-            CollectionPath : 'Functions',
-            Parameters : [
-                {
-                    $Type : 'Common.ValueListParameterIn',
-                    LocalDataProperty : environment.ID,
-                    ValueListProperty : 'environment_ID',
-                },
-                {
-                    $Type : 'Common.ValueListParameterInOut',
-                    LocalDataProperty : senderFunction_ID,
-                    ValueListProperty : 'ID',
-                },
-            ],
-        },
-        Common.ValueListWithFixedValues : true
-)};

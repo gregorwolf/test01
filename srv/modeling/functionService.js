@@ -1,5 +1,21 @@
 const cds = require("@sap/cds");
 
+async function beforeNewEnrichment(data, target) {
+  let mainEntity = {};
+  if (data.allocation_ID) {
+    mainEntity = await SELECT.one.from("Allocations").where({
+      ID: data.allocation_ID,
+    });
+  } else if (data.modelTable_ID) {
+    mainEntity = await SELECT.one.from("ModelTables").where({
+      ID: data.modelTable_ID,
+    });
+  }
+  if (target.elements.environment_ID)
+    data.environment_ID = mainEntity.environment_ID;
+  if (target.elements.function_ID) data.function_ID = mainEntity.function_ID;
+}
+
 async function onCreate(req) {
   const d = cds.model.definitions;
   const data = req.data;
@@ -24,15 +40,13 @@ async function onCreate(req) {
   }
 }
 
-async function onDelete(req) {
-  const snapshot = await cds.run(
-    SELECT.one
-      .from("Allocations")
-      .where({
-        ID: req.data.ID,
-      })
-      .columns(getDeepEntityColumns(req._model.definitions, "Allocations"))
-  );
+async function beforeDelete(req) {
+  const snapshot = await SELECT.one
+    .from("Allocations")
+    .where({
+      ID: req.data.ID,
+    })
+    .columns(getDeepEntityColumns(req._model.definitions, "Allocations"));
   // snapshot.ID = undefined;
   // snapshot.DraftAdministrativeData_DraftUUID =  cds.utils.uuid();
   // snapshot.IsActiveEntity = false;
@@ -75,4 +89,4 @@ function getHttpReqFromContext(context) {
   return req;
 }
 
-module.exports = { onCreate, onDelete };
+module.exports = { onCreate, beforeDelete, beforeNewEnrichment };

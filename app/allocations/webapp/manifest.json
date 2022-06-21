@@ -108,16 +108,6 @@
                     "pattern": "Allocations({key})/rules({key2}):?query:",
                     "name": "AllocationRulesObjectPage",
                     "target": "AllocationRulesObjectPage"
-                },
-                {
-                    "pattern": "Allocations({key})/senderViews({key2}):?query:",
-                    "name": "AllocationSenderViewsObjectPage",
-                    "target": "AllocationSenderViewsObjectPage"
-                },
-                {
-                    "pattern": "Allocations({key})/receiverViews({key2}):?query:",
-                    "name": "AllocationReceiverViewsObjectPage",
-                    "target": "AllocationReceiverViewsObjectPage"
                 }
             ],
             "targets": {
@@ -153,16 +143,6 @@
                                     "detail": {
                                         "route": "AllocationRulesObjectPage"
                                     }
-                                },
-                                "senderViews": {
-                                    "detail": {
-                                        "route": "AllocationSenderViewsObjectPage"
-                                    }
-                                },
-                                "receiverViews": {
-                                    "detail": {
-                                        "route": "AllocationReceiverViewsObjectPage"
-                                    }
                                 }
                             },
                             "controlConfiguration": {
@@ -191,28 +171,6 @@
                         "settings": {
                             "editableHeaderContent": false,
                             "entitySet": "AllocationRules"
-                        }
-                    }
-                },
-                "AllocationSenderViewsObjectPage": {
-                    "type": "Component",
-                    "id": "AllocationSenderViewsObjectPage",
-                    "name": "sap.fe.templates.ObjectPage",
-                    "options": {
-                        "settings": {
-                            "entitySet": "AllocationSenderViews",
-                            "navigation": {}
-                        }
-                    }
-                },
-                "AllocationReceiverViewsObjectPage": {
-                    "type": "Component",
-                    "id": "AllocationReceiverViewsObjectPage",
-                    "name": "sap.fe.templates.ObjectPage",
-                    "options": {
-                        "settings": {
-                            "entitySet": "AllocationReceiverViews",
-                            "navigation": {}
                         }
                     }
                 }

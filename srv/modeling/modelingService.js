@@ -16,12 +16,7 @@ module.exports = function () {
   //   }
   // });
   this.before("NEW", "*", async (req) => {
-    if (cds) {
-      // if (req.target.elements.environment_ID) req.data.environment_ID = "1";
-      // if (req.target.elements.environment_ID) req.data.environment_ID = req.user.id;
-      // if (req.target.elements.function_ID) req.data.function_ID = "4";
-      // if (req.target.elements.sequence) req.data.sequence = 10;
-    }
+    await functionService.beforeNewEnrichment(req.data, req.target);
   });
   // this.before("READ", "*", async (req) => {
   //   if (req.target.elements.environment_ID) {
@@ -36,9 +31,9 @@ module.exports = function () {
   //   }
   // });
   this.before("DELETE", "Allocations", async (req) => {
-    await functionService.onDelete(req);
-  })
-  this.after(["CREATE","UPDATE"], "Allocations", async (req) => {
+    await functionService.beforeDelete(req);
+  });
+  this.after(["CREATE", "UPDATE"], "Allocations", async (req) => {
     console.log(req.data);
   });
   this.after("READ", "Functions", (each) => {
