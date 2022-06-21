@@ -36,10 +36,7 @@ module.exports = function () {
   //   }
   // });
   this.before("DELETE", "Allocations", async (req) => {
-    console.log(req.data);
-  })
-  this.on("DELETE", "Allocations", async (req) => {
-    console.log(req.data);
+    await functionService.onDelete(req);
   })
   this.after(["CREATE","UPDATE"], "Allocations", async (req) => {
     console.log(req.data);

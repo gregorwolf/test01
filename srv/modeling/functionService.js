@@ -24,4 +24,55 @@ async function onCreate(req) {
   }
 }
 
-module.exports = { onCreate };
+async function onDelete(req) {
+  const snapshot = await cds.run(
+    SELECT.one
+      .from("Allocations")
+      .where({
+        ID: req.data.ID,
+      })
+      .columns(getDeepEntityColumns(req._model.definitions, "Allocations"))
+  );
+  // snapshot.ID = undefined;
+  // snapshot.DraftAdministrativeData_DraftUUID =  cds.utils.uuid();
+  // snapshot.IsActiveEntity = false;
+  // snapshot.HasActiveEntity = false;
+  // snapshot.HasDraftEntity = false;
+  // const draftEntity = cds.entities["ModelingService.Allocations"].drafts;
+  // const x = await cds.run(cds.create(draftEntity, snapshot));
+  console.log(snapshot);
+}
+
+function getDeepEntityColumns(csn, entityName) {
+  const columns = [];
+  for (const element of Object.values(csn[entityName].elements)) {
+    if (element.type === "cds.Association" || element["@Core.Computed"]) {
+      continue;
+    }
+    if (element.type === "cds.Composition" && element.target) {
+      columns.push({
+        ref: [element.name],
+        expand: getDeepEntityColumns(csn, element.target),
+      });
+    } else {
+      columns.push({
+        ref: [element.name],
+      });
+    }
+  }
+  return columns;
+}
+
+function getHttpReqFromContext(context) {
+  let req;
+  let nextContext = context;
+  while (!req && nextContext) {
+    req = nextContext._?.req || nextContext._propagated?.req;
+    if (!req) {
+      nextContext = nextContext.context;
+    }
+  }
+  return req;
+}
+
+module.exports = { onCreate, onDelete };
