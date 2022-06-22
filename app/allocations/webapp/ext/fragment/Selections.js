@@ -11,7 +11,7 @@ sap.ui.define(
     "use strict";
 
     return {
-      onPress1: function (oEvent) {
+      onPress1: function () {
         // example with tableSelectDialog
         var dialog = new TableSelectDialog("TableSelectDialog1", {
           title: "Select values",
@@ -92,7 +92,7 @@ sap.ui.define(
           title: "Select values",
           type: "Message",
           content: new sap.ui.core.HTML({
-            content: `<div id="root" class="${window.theme || 'horizon'}"></div><input value="" type="hidden" id="${valueContainerId}" />`,
+            content: `<div id="root"></div><input value="" type="hidden" id="${valueContainerId}" />`,
           }),
           afterOpen: function () {
             const tree = new Tree();
@@ -105,9 +105,6 @@ sap.ui.define(
             press: function () {
               const valueContainer = document.getElementById(valueContainerId);
               const value = valueContainer.getAttribute("value");
-              // MessageToast.show(`Selected value: ${value}`);
-              // const parsedValue = JSON.parse(value);
-              // const displayValue = parsedValue.map(item => `${item.OP} ${item.LOW}`).join('; ');
               oContext.setProperty('formula', value);
  
               dialog.close();
