@@ -111,8 +111,6 @@ sap.ui.define(
             const currentValue = value ? JSON.parse(value) : [];
             setSelectedValues(currentValue.map(item => item.LOW));
             
-            // setOperatorFor();
-
             setTimeout(() => {
               setLoading(false);
               setTopNodes(rootNodes);
