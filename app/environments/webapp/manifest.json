@@ -51,6 +51,14 @@
           "subTitle": "{{flpSubtitle}}",
           "icon": ""
         }
+      },
+      "outbounds": {
+        "environments-outbound": {
+          "semanticObject": "Environments",
+          "action": "manage",
+          "parameters": {},
+          "additionalParameters": "allowed"
+        }
       }
     }
   },
@@ -144,13 +152,13 @@
               "controlConfiguration": {
                 "@com.sap.vocabularies.UI.v1.LineItem": {
                   "columns": {
-                    "Navigation": {
-                      "header": "My Test",
+                    "Navigate": {
+                      "header": "Navigate",
                       "position": {
-                        "anchor": "DataField::type_code",
+                        "anchor": "DataField::environment",
                         "placement": "After"
                       },
-                      "template": "environments.ext.fragment.Navigation"
+                      "template": "environments.ext.fragment.Navigate"
                     }
                   }
                 }
