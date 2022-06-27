@@ -16,20 +16,7 @@ annotate service.Allocations with @(
             $Type  : 'UI.CollectionFacet',
             Label  : 'Sender',
             ID     : 'Sender',
-            Facets : [
-                {
-                    $Type  : 'UI.ReferenceFacet',
-                    Label  : 'Input',
-                    ID     : 'Input',
-                    Target : '@UI.FieldGroup#Input',
-                },
-                {
-                    $Type  : 'UI.ReferenceFacet',
-                    Label  : 'View',
-                    ID     : 'View',
-                    Target : 'senderViews/@UI.LineItem#View',
-                },
-            ],
+            Facets : [],
         },
         {
             $Type  : 'UI.CollectionFacet',
