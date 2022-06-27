@@ -197,14 +197,6 @@ annotate service.AllocationValueAdjustments with {
     code @Common.Text : name
 };
 
-annotate service.Allocations with @(UI.FieldGroup #Input : {
-    $Type : 'UI.FieldGroupType',
-    Data  : [{
-        $Type : 'UI.DataField',
-        Value : senderFunction_ID,
-    }, ],
-});
-
 annotate service.Allocations with {
     senderFunction @(
         Common.ValueList                : {
@@ -1066,3 +1058,39 @@ annotate service.InputFields with @(
             Value : order_code,
         },]
 );
+annotate service.InputFields with {
+    field @Common.Text : {
+            $value : field.description,
+            ![@UI.TextArrangement] : #TextOnly,
+        }
+};
+annotate service.Allocations with {
+    inputFunction @Common.Text : inputFunction.description
+};
+annotate service.Allocations with {
+    inputFunction @(Common.ValueList : {
+            $Type : 'Common.ValueListType',
+            CollectionPath : 'Functions',
+            Parameters : [
+                {
+                    $Type : 'Common.ValueListParameterIn',
+                    LocalDataProperty : environment.ID,
+                    ValueListProperty : 'environment_ID',
+                },
+                {
+                    $Type : 'Common.ValueListParameterInOut',
+                    LocalDataProperty : inputFunction_ID,
+                    ValueListProperty : 'ID',
+                },
+                {
+                    $Type : 'Common.ValueListParameterDisplayOnly',
+                    ValueListProperty : 'function',
+                },
+                {
+                    $Type : 'Common.ValueListParameterDisplayOnly',
+                    ValueListProperty : 'description',
+                },
+            ],
+        },
+        Common.ValueListWithFixedValues : false
+)};
