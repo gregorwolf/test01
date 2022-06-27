@@ -3,6 +3,7 @@ using from '../../db/allocations';
 using from '../../db/functions';
 using from '../../db/commonTypes';
 using from '../../db/fields';
+using from '../../db/commonEntities';
 
 annotate service.Allocations with @(
     UI.Facets                         : [
@@ -16,7 +17,19 @@ annotate service.Allocations with @(
             $Type  : 'UI.CollectionFacet',
             Label  : 'Sender',
             ID     : 'Sender',
-            Facets : [],
+            Facets : [
+                {
+                    $Type : 'UI.ReferenceFacet',
+                    Label : 'Input',
+                    ID : 'Input',
+                    Target : '@UI.FieldGroup#Input2',
+                },
+                {
+                    $Type : 'UI.ReferenceFacet',
+                    Label : 'View',
+                    ID : 'View',
+                    Target : 'inputFields/@UI.LineItem#View',
+                },],
         },
         {
             $Type  : 'UI.CollectionFacet',
@@ -1029,3 +1042,27 @@ annotate service.AllocationInputFunctions with {
         ![@UI.TextArrangement] : #TextOnly,
     }
 };
+
+annotate service.Allocations with @(
+    UI.FieldGroup #Input2 : {
+        $Type : 'UI.FieldGroupType',
+        Data : [
+            {
+                $Type : 'UI.DataField',
+                Value : inputFunction_ID,
+            },],
+    }
+);
+annotate service.InputFields with @(
+    UI.LineItem #View : [
+        {
+            $Type : 'UI.DataField',
+            Value : field_ID,
+        },{
+            $Type : 'UI.DataField',
+            Value : formula,
+        },{
+            $Type : 'UI.DataField',
+            Value : order_code,
+        },]
+);
