@@ -19,9 +19,7 @@
         "uri": "/service/environment/",
         "type": "OData",
         "settings": {
-          "annotations": [
-            "annotation"
-          ],
+          "annotations": ["annotation"],
           "localUri": "localService/metadata.xml",
           "odataVersion": "4.0"
         }
@@ -55,6 +53,12 @@
       "outbounds": {
         "environments-outbound": {
           "semanticObject": "Environments",
+          "action": "manage",
+          "parameters": {},
+          "additionalParameters": "allowed"
+        },
+        "functions-outbound": {
+          "semanticObject": "Functions",
           "action": "manage",
           "parameters": {},
           "additionalParameters": "allowed"
