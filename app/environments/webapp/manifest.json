@@ -140,7 +140,21 @@
                                     }
                                 }
                             },
-                            "initialLoad": "Enabled"
+                            "initialLoad": "Enabled",
+                            "controlConfiguration": {
+                              "@com.sap.vocabularies.UI.v1.LineItem": {
+                                "columns": {
+                                  "Navigation": {
+                                    "header": "My Test",
+                                    "position": {
+                                      "anchor": "DataField::type_code",
+                                      "placement": "After"
+                                    },
+                                    "template": "environments.ext.fragment.Navigation"
+                                  }
+                                }
+                              }
+                            }
                         }
                     }
                 },
