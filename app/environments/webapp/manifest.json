@@ -166,16 +166,7 @@
               "initialLoad": "Enabled",
               "controlConfiguration": {
                 "@com.sap.vocabularies.UI.v1.LineItem": {
-                  "columns": {
-                    "Navigate": {
-                      "header": "Navigate",
-                      "position": {
-                        "anchor": "DataField::environment",
-                        "placement": "After"
-                      },
-                      "template": "environments.ext.fragment.Navigate"
-                    }
-                  }
+                  "columns": {}
                 }
               }
             }
