@@ -5,7 +5,6 @@ sap.ui.define(["sap/m/library"], function ({ URLHelper }) {
         const oContext = oEvent.getSource().getBindingContext();        
         const url = oContext.getObject().url;
         URLHelper.redirect(url);
-        location.reload();
     },
   };
 });

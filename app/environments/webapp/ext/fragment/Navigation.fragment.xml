@@ -1,7 +1,7 @@
 <core:FragmentDefinition xmlns:core="sap.ui.core" xmlns="sap.m">
 	<VBox core:require="{handler: 'environments/ext/fragment/Navigation'}">
 		<items>
-			<Button text="Click me" press="handler.onPress" />
+			<Button text="Go to" press="handler.onPress" />
 		</items>
 	</VBox>
 
