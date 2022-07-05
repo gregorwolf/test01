@@ -8,6 +8,7 @@
 		confirm=".onValueHelpDialogClose"
 		cancel=".onValueHelpDialogClose"
 		showClearButton="true"
+		multiSelect="true"
 		items="{
 			path: '/Fields',
 			sorter: {
