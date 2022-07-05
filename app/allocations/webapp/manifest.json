@@ -146,19 +146,14 @@
                 }
               },
               "controlConfiguration": {
-                "inputFields/@com.sap.vocabularies.UI.v1.LineItem#View": {
-                  "columns": {
-                    "Selection": {
-                      "header": "Selections",
-                      "position": {
-                        "anchor": "DataField::order_code",
-                        "placement": "After"
-                      },
-                      "template": "allocations.ext.fragment.Selections",
-                      "availability": "Default"
-                    }
-                  }
-                }
+								"inputFields/@com.sap.vocabularies.UI.v1.LineItem#View": {
+									"actions": {
+										"customActionCreate": {
+											"press": "allocations.ext.fragment.Selections.onOpenValueHelp",
+											"text": "Custom create"
+										}
+									}
+								}
               }
             }
           }
