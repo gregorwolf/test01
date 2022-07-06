@@ -85,6 +85,9 @@
           "kind": "enterprise-messaging",
           "format": "cloudevents"
         }
+      },
+      "db": {
+        "kind": "hana-cloud"
       }
     },
     "cdsc": {
