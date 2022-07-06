@@ -19,13 +19,11 @@ sap.ui.define([
         "use strict";
         return ControllerExtension.extend("allocations.ext.CustomController", {
             override: {
-                // 	/**
-                // 	 * Called when a controller is instantiated and its View controls (if available) are already created.
-                // 	 * Can be used to modify the View before it is displayed, to bind event handlers and do other one-time initialization.
-                // 	 * @memberOf customer.managecustomerjit.UpdatePartGroup
-                // 	 */
-                onInit: function () {
-                    // this.base.byId(this.getView().getId() + "--componentgroup::responsiveTable");
+                onAfterRendering: function () {
+                    //allocations::AllocationsObjectPage--fe::table::inputFields::LineItem::View::StandardAction::Create
+                    const createBtn = this.base.byId(this.getView().getId() + "--fe::table::inputFields::LineItem::View::StandardAction::Create");
+                    createBtn.unbindProperty("visible");
+                    createBtn.setVisible(false);
                 }
             }
         });
