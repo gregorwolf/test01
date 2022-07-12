@@ -8,6 +8,12 @@ using {
     sap.common.CodeList
 } from '@sap/cds/common';
 
+type BusinessEvent : String @title : 'Business Event';
+type PrimaryKey : String @title : 'Primary Key'; // Primary key in JSON format, e.g. {ID: 123; CLIENT: 'ABC'}
+type Message : String @title : 'Messsage';
+type MainFunction : Function @title : 'Main Version';
+type Package : String @title : 'Package';
+type Run : GUID @title : 'Run ID'  @UI.Hidden : false;
 type GUID : UUID @odata.Type : 'Edm.String'  @UI.Hidden;
 type Environment : String @title : 'Environment'  @assert.format : '[A-Z,0-9,_]{3}'  @Common.IsUpperCase;
 type Version : String @title : 'Version'  @assert.format : '(^$|[A-Z,0-9,_]{4})'  @Common.IsUpperCase;
@@ -18,16 +24,26 @@ type Partition : String @title : 'Partition'  @assert.format : '[A-Z,0-9,_]{1,20
 type Process : String @title : 'Process'  @assert.format : '[A-Z,0-9,_]{1,7}'  @Common.IsUpperCase;
 type Activity : String @title : 'Activity'  @assert.format : '[A-Z,0-9,_]{1,7}'  @Common.IsUpperCase;
 type Report : String @title : 'Report'  @assert.format : '[A-Z,0-9,_]{1,20}'  @Common.IsUpperCase;
-type Element : String @title : 'Report'  @assert.format : '[A-Z,0-9,_]{1,7}'  @Common.IsUpperCase;
+type Element : String @title : 'Element'  @assert.format : '[A-Z,0-9,_]{1,7}'  @Common.IsUpperCase;
 type Conversion : String @title : 'Conversion'  @assert.format : '[A-Z,0-9,_]{1,10}'  @Common.IsUpperCase;
 type Description : String @title : 'Description'  @mandatory  @assert.notNull; //  @Core.Immutable woud bring it up in creation popup as well
 type Documentation : LargeString @title : 'Documentation';
+type Step : Integer @title : 'Step';
+type SField : String @title : 'SField';
 type Sequence : Integer @title : 'Sequence';
 type Rule : String @title : 'Rule'  @assert.format : '[A-Z,0-9,_]{1,5}'  @Common.IsUpperCase;
 type ParentRule : Rule @title : 'Parent Rule';
 type IncludeInputData : Boolean @title : 'Include original Input Data';
 type IncludeInitialResult : Boolean @title : 'Include initial Results';
-
+type Content : LargeString @title : 'Content';
+type CalculationCode : LargeString @title : 'Code';
+type PerformerGroup : String @title : 'Performer Group';
+type ReviewerGroup : String @title : 'Reviewer Group';
+type StartDate : String @title : 'Start Date';
+type DueDate : String @title : 'Due Date';
+type Url : String @title : 'URL';
+type Formula : String @title : 'Formula';
+type Name: String @title: 'Name';
 type MessageType @(assert.range) : String(1) @title : 'Message type' enum {
     Info    = 'I';
     Success = 'S';

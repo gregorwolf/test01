@@ -32,6 +32,7 @@ entity ModelTables : managed, function {
 entity ModelTableFields : managed, field {
     key ID         : GUID;
         modelTable : Association to one ModelTables;
+        sourceField: SourceField;
 }
 
 type ModelTableType @(assert.range) : String(10) enum {
@@ -45,3 +46,5 @@ entity ModelTableTypes : CodeList {
 }
 
 type TransportData : Boolean @title : 'Transport Data';
+type SourceField : String @title : 'Source field';
+

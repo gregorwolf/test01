@@ -19,16 +19,6 @@ using {environment} from './commonAspects';
 using {Fields} from './fields';
 using {Connections} from './connections';
 
-@assert.unique     : {
-    currencyConversion : [
-        environment,
-        currencyConversion
-    ],
-    description        : [
-        environment,
-        description
-    ]
-}
 @cds.odata.valuelist
 @UI.Identification : [{Value : currencyConversion}]
 entity CurrencyConversions : managed, environment {
@@ -50,16 +40,6 @@ entity CurrencyConversions : managed, environment {
         prefactorConnection     : Association to one Connections              @title       : 'Prefactors Table';
 }
 
-@assert.unique     : {
-    unitConversion : [
-        environment,
-        unitConversion
-    ],
-    description    : [
-        environment,
-        description
-    ]
-}
 @cds.odata.valuelist
 @UI.Identification : [{Value : unitConversion}]
 entity UnitConversions : managed, environment {

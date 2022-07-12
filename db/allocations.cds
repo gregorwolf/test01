@@ -21,26 +21,27 @@ using {
     IsActive,
     ParentRule,
 } from './commonTypes';
+
 using {
     function,
     functionExecutable,
-    field,
     formulaOrder,
     selection,
     formulaGroupOrder,
 } from './commonAspects';
-using {
-    Functions,
-    FunctionChecks
-} from './functions';
+
+// using {FunctionInputFields} from './commonEntities';
+using {Functions, } from './functions';
+
 using {
     Fields,
     FieldType,
     FieldClass,
 } from './fields';
+
 using {Checks} from './checks';
 
-entity Allocations : managed, functionExecutable {
+entity Allocations : managed, function, functionExecutable {
     key ID                      : GUID                                              @Common.Text : function.description  @Common.TextArrangement : #TextOnly;
         type                    : Association to one AllocationTypes                @title       : 'Type';
         valueAdjustment         : Association to one AllocationValueAdjustments     @title       : 'Value Adjustment';
@@ -56,7 +57,9 @@ entity Allocations : managed, functionExecutable {
         termYear                : TermYear;
         termMinimum             : TermMinimum;
         termMaximum             : TermMaximum;
-        receiverFunction        : Association to one Functions       @title       : 'Receiver Input';
+        inputFields             : Composition of many AllocationInputFields
+                                      on inputFields.allocation = $self             @title       : 'Sender Fields';
+        receiverFunction        : Association to one Functions                      @title       : 'Receiver Input';
         receiverViews           : Composition of many AllocationReceiverViews
                                       on receiverViews.allocation = $self           @title       : 'Receiver View';
         earlyExitCheck          : Association to one AllocationEarlyExitChecks      @title       : 'Early Exit Check';
@@ -101,6 +104,19 @@ entity OffsetAllocation                 as projection on Allocations {
     debitCredits,
     checks
 };
+
+entity AllocationInputFields : managed, function, formulaOrder {
+    key ID         : GUID;
+        allocation : Association to one Allocations;
+        field      : Association to one Fields @title : 'Field';
+        selections : Composition of many AllocationInputFieldSelections
+                         on selections.field = $self;
+}
+
+entity AllocationInputFieldSelections : managed, function, selection {
+    key ID    : GUID;
+        field : Association to one AllocationInputFields;
+}
 
 entity AllocationReceiverViews : managed, function, formulaOrder {
     key ID         : GUID;
@@ -250,8 +266,6 @@ type TermMaximum : String @title : 'Term Maximum';
 @cds.odata.valuelist
 entity AllocationEarlyExitChecks        as projection on Checks;
 
-@cds.autoexpose
-@cds.odata.valuelist
 entity AllocationRules : managed, function {
     key ID                : GUID;
         allocation        : Association to one Allocations;

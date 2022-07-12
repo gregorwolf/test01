@@ -22,7 +22,7 @@ using {
 
 using {Fields} from './fields';
 
-@assert.unique : {description : [
+@assert.unique : {checkDescription : [
     environment,
     description,
 ]}
@@ -53,21 +53,9 @@ entity CheckSelections : managed, selection {
 }
 
 type CheckCategory @(assert.range) : String(10) @title : 'Check Category' enum {
-    /**
-     * Including Check
-     */
     Including           = '';
-    /**
-     * Excluding Check
-     */
     Excluding           = 'EX';
-    /**
-     * Master Data Check
-     */
     MasterData          = 'MD';
-    /**
-     * Master Data or Initial Value Check
-     */
     MasterDataOrInitial = 'MDI';
 }
 

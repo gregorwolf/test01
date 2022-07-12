@@ -23,7 +23,7 @@ using {Fields} from './fields';
         environment,
         partition
     ],
-    description : [
+    partitionDescription : [
         environment,
         description
     ]
@@ -46,9 +46,7 @@ entity PartitionRanges : managed, environment {
         sequence     : Sequence;
         level        : Level default 0;
         value        : Value;
-        hanaVolumeId : HanaVolumeId default 0;
 }
 
 type Range : String @title : 'Range'  @assert.format : '[A-Z,0-9,_]{1,5}';
 type Level : Integer @title : 'Level';
-type HanaVolumeId : Integer @title : 'HANA Volume ID of Host';

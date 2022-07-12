@@ -1,0 +1,6 @@
+CODE;NAME;DESCR
+I;Info;Info
+S;Status;Status
+W;Warning;Warning
+E;Error;Error
+A;Abort;Abort

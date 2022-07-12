@@ -29,6 +29,12 @@ annotate service.Allocations with @(
                     Label : 'View',
                     ID : 'View',
                     Target : 'inputFields/@UI.LineItem#View',
+                },
+                {
+                    $Type : 'UI.ReferenceFacet',
+                    Label : 'View',
+                    ID : 'View2',
+                    Target : 'inputFields/@UI.LineItem#View',
                 },],
         },
         {
@@ -1094,3 +1100,16 @@ annotate service.Allocations with {
         },
         Common.ValueListWithFixedValues : false
 )};
+annotate service.FunctionInputFields with @(
+    UI.LineItem #View : [
+        {
+            $Type : 'UI.DataField',
+            Value : field_ID,
+        },{
+            $Type : 'UI.DataField',
+            Value : formula,
+        },{
+            $Type : 'UI.DataField',
+            Value : order_code,
+        },]
+);

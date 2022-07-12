@@ -23,11 +23,11 @@ using {
 using {Functions} from './functions';
 
 @assert.unique : {
-    field       : [
+    fieldname       : [
         environment,
         field
     ],
-    description : [
+    fieldDescription : [
         environment,
         description,
     ]

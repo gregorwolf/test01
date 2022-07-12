@@ -112,7 +112,7 @@ annotate service.Functions with {
     parent @(
         Common.ValueList                : {
             $Type          : 'Common.ValueListType',
-            CollectionPath : 'FunctionParents',
+            CollectionPath : 'FunctionParentFunctionsVH',
             Parameters     : [
                 {
                     $Type             : 'Common.ValueListParameterInOut',

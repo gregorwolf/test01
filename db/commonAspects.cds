@@ -9,6 +9,7 @@ using {
 } from '@sap/cds/common';
 
 using {
+  GUID,
   Function,
   Sequence,
   Field,
@@ -19,12 +20,10 @@ using {
   IncludeInputData,
   IncludeInitialResult,
   ResultHandlings,
+  Formula,
 } from './commonTypes';
 
-using {
-  ResultFunctions,
-  InputFields
-} from './commonEntities';
+using {FunctionResultFunctionsVH, } from './commonEntities';
 using {Environments} from './environments';
 using {
   Functions,
@@ -35,15 +34,6 @@ using {Fields} from './fields';
 using {Checks} from './checks';
 using {Partitions} from './partitions';
 
-// aspect myCodeList @(
-//   cds.autoexpose,
-//   cds.persistence.skip : 'if-unused',
-//   cds.odata.valuelist,
-// // UI.Identification    : [{Value : name}],
-// ) {
-//   name  : String(255)  @title : '{i18n>Name}';
-//   descr : String(1000) @title : '{i18n>Description}';
-// }
 
 // @cds.persistence.journal // Enable schema evolution for all environment configuration tables
 aspect environment : {
@@ -62,17 +52,41 @@ aspect check : environment {
   check : Association to one Checks @mandatory;
 }
 
-aspect functionExecutable : function {
+aspect functionExecutable {
   includeInputData     : IncludeInputData default false;
   resultHandling       : Association to one ResultHandlings            @title : 'Result Handling';
   includeInitialResult : IncludeInitialResult default false;
-  resultFunction       : Association to one ResultFunctions            @title : 'Result Model Table';
+  resultFunction       : Association to one FunctionResultFunctionsVH  @title : 'Result Model Table';
   processingType       : Association to one FunctionProcessingTypes    @title : 'Processing Type';
   businessEventType    : Association to one FunctionBusinessEventTypes @title : 'Business Event Type';
   partition            : Association to one Partitions                 @title : 'Partition';
-  inputFunction        : Association to one Functions                  @title : 'Sender Input';
-  inputFields          : Composition of many InputFields
-                           on inputFields.function.ID = function.ID       @title : 'Sender Fields';
+  inputFunction        : Association to one Functions                  @title : 'Input';
+}
+
+aspect functionInputFields : formulaOrder {
+  key ID : GUID;
+  field  : Association to one Fields @title : 'Field';
+}
+
+aspect functionInputFieldSelections : selection {
+  key ID : GUID;
+}
+
+aspect functionLookupFunction {
+  lookupFunction : Association to one FunctionResultFunctionsVH;
+}
+
+aspect functionGSASignatures : signatureGSA {
+  key ID : GUID;
+}
+
+aspect functionSASignatures : signatureSA {
+  key ID : GUID;
+}
+
+aspect functionChecks : managed, function {
+  key ID : GUID;
+  check  : Association to one Checks;
 }
 
 aspect signatureSA : field {
@@ -85,7 +99,7 @@ aspect signatureGSA : signatureSA {
 }
 
 aspect formula {
-  formula : String @title : 'Formula';
+  formula : Formula;
 }
 
 aspect formulaGroup : formula {

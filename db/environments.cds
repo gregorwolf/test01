@@ -7,6 +7,7 @@ using {
     cuid,
     sap.common.CodeList
 } from '@sap/cds/common';
+
 using {
     GUID,
     Environment,
@@ -14,13 +15,18 @@ using {
     Description,
     Sequence
 } from './commonTypes';
+
 using {Fields} from './fields';
+
 using {Checks} from './checks';
+
 using {
     CurrencyConversions,
     UnitConversions
 } from './conversions';
+
 using {Partitions} from './partitions';
+
 using {Functions} from './functions';
 
 @assert.unique     : {
@@ -28,7 +34,7 @@ using {Functions} from './functions';
         environment,
         version
     ],
-    description : [
+    environmentDescription : [
         description,
         version
     ]

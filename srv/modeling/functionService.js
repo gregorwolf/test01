@@ -77,16 +77,4 @@ function getDeepEntityColumns(csn, entityName) {
   return columns;
 }
 
-function getHttpReqFromContext(context) {
-  let req;
-  let nextContext = context;
-  while (!req && nextContext) {
-    req = nextContext._?.req || nextContext._propagated?.req;
-    if (!req) {
-      nextContext = nextContext.context;
-    }
-  }
-  return req;
-}
-
 module.exports = { onCreate, beforeDelete, beforeNewEnrichment };

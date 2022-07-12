@@ -6,19 +6,19 @@
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
-    "@sap/cds": "^5",
-    "@sap/cds-odata-v2-adapter-proxy": "^1.8.19",
+    "@sap/cds": "^6.0.2",
+    "@sap/cds-odata-v2-adapter-proxy": "^1.9",
     "@sap/textbundle": "^4.1.0",
-    "express": "^4",
-    "hdb": "^0.19.0",
-    "latest-version": "^6.0.0"
+    "express": "^4.18.1",
+    "hdb": "^0.19.3",
+    "latest-version": "^7.0.0"
   },
   "devDependencies": {
-    "@sap/eslint-plugin-ui5-jsdocs": "^2.0.5",
-    "@sap/ux-specification": "^1.100.3",
-    "@sapui5/ts-types": "^1.92.2",
-    "eslint": "^7.32.0",
-    "sqlite3": "^5.0.2"
+    "@sap/eslint-plugin-ui5-jsdocs": "^2.0.8",
+    "@sap/ux-specification": "^1.102.1",
+    "@sapui5/ts-types": "^1.103.1",
+    "eslint": "^8.19.0",
+    "sqlite3": "^5.0.8"
   },
   "scripts": {
     "start": "cds run",

@@ -1,0 +1,5 @@
+CODE;NAME;DESCR
+GET;Get;Get
+PUT;Put;Put
+POST;Post;Post
+PATCH;Patch;Patch
