@@ -1,0 +1,8 @@
+CODE;NAME;DESCR
+FROM;From;From
+FOJ;Full Outer Join;Full Outer Join
+INJ;Inner Join;Inner Join
+LOJ;Left Outer Join;Left Outer Join
+CRJ;Cross Join;Cross Join
+LOOKUP;Lookup;Lookup
+LOOKUP_AP;Lookup auto predicate;Lookup auto predicate

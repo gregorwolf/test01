@@ -46,6 +46,8 @@ using {Checks} from './checks';
 entity Derivations : managed, function, functionExecutable {
     key ID              : GUID                                  @Common.Text : function.description  @Common.TextArrangement : #TextOnly;
         type            : Association to one DerivationTypes    @title       : 'Type';
+        suppressInitialResults: SuppressInitialResults;
+        ensureDistinctResults: EnsureDistinctResults;
         inputFields     : Composition of many DerivationInputFields
                               on inputFields.derivation = $self @title       : 'View';
         signatureFields : Composition of many DerivationSignatureFields
@@ -109,11 +111,14 @@ entity DerivationChecks : managed, function {
 }
 
 type DerivationType @(assert.range) : String(10) @title : 'Type' enum {
-    Relative = 'RELATIVE';
-    Absolute = 'ABSOLUTE';
-    Workbook = 'WORKBOOK';
+    Derivation = 'DERIVATION';
+    TransferStructure = 'TRASTRU';
+    ReverseTransferStructure = 'RTRASTRU';
 }
 
 entity DerivationTypes : CodeList {
-    key code : DerivationType default 'RELATIVE';
+    key code : DerivationType default 'DERIVATION';
 }
+
+type SuppressInitialResults: Boolean @title: 'Suppress initial Results';
+type EnsureDistinctResults: Boolean @title: 'Ensure distinct Results';

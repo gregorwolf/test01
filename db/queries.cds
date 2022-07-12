@@ -86,9 +86,9 @@ entity QueryFieldTypes : CodeList {
 }
 
 type QueryFieldLayout @(assert.range) : String(10) enum {
-    Environment = 'ROW';
-    HANA        = 'COL';
-    OData       = 'FRE';
+    Row    = 'ROW';
+    Column = 'COL';
+    Free   = 'FRE';
 }
 
 entity QueryFieldLayouts : CodeList {
@@ -129,7 +129,6 @@ entity QueryFieldDisplays : CodeList {
 }
 
 type QueryFieldScalingFactor @(assert.range) : String(10) enum {
-    Default         = '';
     DivBy1          = '0';
     DivBy10         = '1';
     DivBy100        = '2';
@@ -147,7 +146,6 @@ entity QueryFieldScalingFactors : CodeList {
 }
 
 type QueryFieldDecimalPlace @(assert.range) : String(10) enum {
-    Default   = '';
     Decimals0 = '0';
     Decimals1 = '1';
     Decimals2 = '2';

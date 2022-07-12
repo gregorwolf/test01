@@ -61,7 +61,7 @@ type CommentTargetCategory @(assert.range) : String(10) enum {
 }
 
 entity CommentTargetCategories : CodeList {
-    key code : CommentTargetCategory default 'E';
+    key code : CommentTargetCategory default 'ACTIVITY';
 }
 
 type Comment : LargeString @title : 'Comment';

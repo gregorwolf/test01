@@ -45,5 +45,5 @@ type LayoutCategory @(assert.range) : String(10) enum {
 // }
 
 entity LayoutCategories : CodeList {
-    key code : LayoutCategory default 'APPMON';
+    key code : LayoutCategory default 'SHOW';
 }

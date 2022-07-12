@@ -116,7 +116,7 @@ type CalculationUnitProcessActivityType @(assert.range) : String @title : 'Type'
 }
 
 entity CalculationUnitProcessActivityTypes : CodeList {
-    key code : CalculationUnitProcessActivityType default 'OPEN';
+    key code : CalculationUnitProcessActivityType default 'IO';
 }
 
 type CalculationUnitProcessActivityState @(assert.range) : String @title : 'State' enum {

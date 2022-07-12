@@ -1,2 +1,4 @@
 CODE;NAME;DESCR
-ENV;Model Table;Model Table
+ENV;Environment;Environment
+HANA;HANA Table;HANA Table
+ODATA;OData;OData

@@ -1,0 +1,12 @@
+CODE;NAME;DESCR
+FI_AP;Finance Accounts Payable;Finance Accounts Payable
+FI_AR;Finance Accounts Receivable;Finance Accounts Receivable
+FI_GL;Finance General Ledger;Finance General Ledger
+FI_GLI;Finance General Ledger Items;Finance General Ledger Items
+FSI;Financial Statement Items;Financial Statement Items
+HANA_SP;HANA Stored Procedure;HANA Stored Procedure
+JS;JavaScript;JavaScript
+PO;Purchase Order;Purchase Order
+PYTHON;Python;Python
+SD;Sales and Distribution;Sales and Distribution
+SP;Secondary Cost Element Posting;Secondary Cost Element Posting

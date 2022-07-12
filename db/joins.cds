@@ -138,15 +138,16 @@ entity JoinTypes : CodeList {
     key code : JoinType default 'IMPLICIT';
 }
 
-type JoinRuleType @(assert.range) : String(10) @title : 'Type' enum {
-    View   = 'VIEW';
+type JoinRuleType @(assert.range) : String(12) @title : 'Type' enum {
+    Projection   = 'PROJECTION';
+    Aggregation = 'AGGREGATION';
     Union  = 'UNION';
     Join   = 'JOIN';
     Lookup = 'LOOKUP';
 }
 
 entity JoinRuleTypes : CodeList {
-    key code : JoinRuleType default 'VIEW';
+    key code : JoinRuleType default 'PROJECTION';
 }
 
 type JoinRuleJoinType @(assert.range) : String(10) @title : 'Join Type' enum {

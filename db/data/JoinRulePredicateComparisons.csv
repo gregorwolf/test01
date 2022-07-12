@@ -1,0 +1,7 @@
+CODE;NAME;DESCR
+=;Equal;Equal
+<>;Not Equal;Not Equal
+>;Greater Than;Greater Than
+<;Less Than;Less Than
+>=;Greater Or Equal Than;Greater Or Equal Than
+<=;Less Or Equal Than;Less Or Equal Than
