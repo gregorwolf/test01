@@ -29,7 +29,6 @@ type Conversion : String @title : 'Conversion'  @assert.format : '[A-Z,0-9,_]{1,
 type Description : String @title : 'Description'  @mandatory  @assert.notNull; //  @Core.Immutable woud bring it up in creation popup as well
 type Documentation : LargeString @title : 'Documentation';
 type Step : Integer @title : 'Step';
-type SField : String @title : 'SField';
 type Sequence : Integer @title : 'Sequence';
 type Rule : String @title : 'Rule'  @assert.format : '[A-Z,0-9,_]{1,5}'  @Common.IsUpperCase;
 type ParentRule : Rule @title : 'Parent Rule';

@@ -7,7 +7,6 @@ using {
     Function,
     Field,
     Check,
-    SField,
     Step,
     Conversion,
     Partition,
