@@ -155,3 +155,22 @@ annotate service.Functions with {
 annotate service.Functions with {
     documentation @UI.MultiLineText : true
 };
+annotate service.Functions with @(
+    UI.SelectionPresentationVariant #tableView : {
+        $Type : 'UI.SelectionPresentationVariantType',
+        PresentationVariant : {
+            $Type : 'UI.PresentationVariantType',
+            Visualizations : [
+                '@UI.LineItem',
+            ],
+        },
+        SelectionVariant : {
+            $Type : 'UI.SelectionVariantType',
+            SelectOptions : [
+            ],
+        },
+        Text : 'Table View',
+    },
+    UI.LineItem #tableView : [
+    ],
+);

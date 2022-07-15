@@ -109,7 +109,21 @@
             }
         },
         "resources": {
-            "css": []
+            "css": [],
+            "js": [
+                {
+                    "uri": "libs/go.js"
+                }
+            ]
+        },
+        "extends": {
+            "extensions": {
+                "sap.ui.controllerExtensions": {
+                    "sap.fe.templates.ListReport.ListReportController": {
+                        "controllerName": "functions.ext.controller.LRExtend"
+                    }
+                }
+            }
         },
         "routing": {
             "routes": [
@@ -132,7 +146,6 @@
                     "options": {
                         "settings": {
                             "entitySet": "Functions",
-                            "variantManagement": "Page",
                             "navigation": {
                                 "Functions": {
                                     "detail": {
@@ -140,15 +153,20 @@
                                     }
                                 }
                             },
-                            "initialLoad": "Enabled",
-                            "controlConfiguration": {
-                                "@com.sap.vocabularies.UI.v1.LineItem": {
-                                    "actions": {
-                                        "DataFieldForAction::ModelingService.activate": {
-                                            "enableOnSelect": "multi"
-                                        }
+                            "variantManagement": "None",
+							"initialLoad": true,
+                            "views": {
+                                "paths": [
+                                    {
+                                        "key": "tableView",
+                                        "annotationPath": "com.sap.vocabularies.UI.v1.SelectionPresentationVariant#tableView"
+                                    },
+                                    {
+                                        "key": "tableView1",
+                                        "label": "Diagram",
+                                        "template": "functions.ext.view.CustomViewWithButton"
                                     }
-                                }
+                                ]
                             }
                         }
                     }
