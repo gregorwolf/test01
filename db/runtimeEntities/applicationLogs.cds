@@ -17,6 +17,7 @@ using {
     Message,
     PrimaryKey,
     BusinessEvent,
+    Statement,
 } from '../commonTypes';
 
 using {
@@ -38,7 +39,7 @@ using {
 } from '@sap/cds/common';
 
 entity ApplicationLogs : managed {
-    key ID            : GUID                                    @UI.Hidden : false;
+    key ID            : GUID                                     @UI.Hidden : false;
         run           : Run;
         type          : ApplicationLogType;
         environment   : Environment;
@@ -54,10 +55,42 @@ entity ApplicationLogs : managed {
         conversion    : Conversion;
         partition     : Partition;
         package       : Package;
-        state         : Association to one ApplicationLogStates @title     : 'State';
+        state         : Association to one ApplicationLogStates  @title     : 'State';
         messages      : Composition of many ApplicationLogMessages
-                            on messages.applicationLog = $self  @title     : 'Messages';
+                            on messages.applicationLog = $self   @title     : 'Messages';
+        statistics    : Composition of many ApplicationLogStatistics
+                            on statistics.applicationLog = $self @title     : 'Statistics';
 }
+
+entity ApplicationLogStatistics : managed {
+    key ID                 : GUID                               @UI.Hidden : false;
+        applicationLog     : Association to one ApplicationLogs @title     : 'Log';
+        function           : Function;
+        startTimestamp     : StartTimestamp;
+        endTimestamp       : EndTimestamp;
+        inputRecords       : InputRecords;
+        resultRecords      : ResultRecords;
+        successRecords     : SuccessRecords;
+        warningRecords     : WarningRecords;
+        errorRecords       : ErrorRecords;
+        abortRecords       : AbortRecords;
+        inputDuration      : InputDuration;
+        processingDuration : ProcessingDuration;
+        outputDuration     : OutputDuration;
+
+}
+
+type StartTimestamp : Timestamp @title : 'Start Timestamp (UTC)';
+type EndTimestamp : Timestamp @title : 'End Timestamp (UTC)';
+type InputRecords : Integer64 @title : 'Input Records';
+type ResultRecords : Integer64 @title : 'Output Records';
+type SuccessRecords : Integer64 @title : 'Success Records';
+type WarningRecords : Integer64 @title : 'Warning Records';
+type ErrorRecords : Integer64 @title : 'Error Records';
+type AbortRecords : Integer64 @title : 'Abort Records';
+type InputDuration : Decimal @title : 'Input Reading Duration (s)';
+type ProcessingDuration : Decimal @title : 'Processing Duration (s)';
+type OutputDuration : Decimal @title : 'Output Writing Duration (s)';
 
 entity ApplicationLogMessages : managed {
     key ID             : GUID                                          @UI.Hidden : false;
@@ -116,7 +149,6 @@ type Argument3 : Argument1 @title : 'Argument 1';
 type Argument4 : Argument1 @title : 'Argument 1';
 type Argument5 : Argument1 @title : 'Argument 1';
 type Argument6 : Argument1 @title : 'Argument 1';
-type Statement : LargeString @title : 'Statement';
 type Entity : String @title : 'Entity';
 type Args : LargeString @title : 'Arguments';
 type Target : String @title : 'Target';

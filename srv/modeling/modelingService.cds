@@ -12,6 +12,8 @@ using {ModelTables as modelTables} from '../../db/modelTables';
 using {CalculationUnits as calculationUnits} from '../../db/calculationUnits';
 using {Joins as joins} from '../../db/joins';
 using {Queries as queries} from '../../db/queries';
+using {ApplicationLogs as applicationLogs} from '../../db/runtimeEntities/applicationLogs';
+using {RuntimeFunctions as runtimeFunctions} from '../../db/runtimeEntities/runtimeFunctions';
 
 @path : 'service/modeling'
 service ModelingService {
@@ -63,4 +65,8 @@ service ModelingService {
 
     @odata.draft.enabled
     entity Queries             as projection on queries;
+
+    entity ApplicationLogs as projection on applicationLogs;
+
+    entity RuntimeFunctions as projection on runtimeFunctions;
 }

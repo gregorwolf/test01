@@ -164,3 +164,4 @@ entity ResultHandlings : CodeList {
 
 type IsActive : Boolean @title : 'Active';
 type Value : String @title : 'Value';
+type Statement : LargeString @title : 'Statement';

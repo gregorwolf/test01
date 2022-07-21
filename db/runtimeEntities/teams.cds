@@ -18,6 +18,16 @@ using {
     sap.common.CodeList,
 } from '@sap/cds/common';
 
+@assert.unique : {
+    fieldname        : [
+        environment,
+        field
+    ],
+    fieldDescription : [
+        environment,
+        description,
+    ]
+}
 entity Teams : managed {
     key ID          : GUID;
         name        : Name;
@@ -34,10 +44,28 @@ entity TeamUsers : managed {
 
 entity Users : managed {
     key ID         : GUID;
-        eMail      : EMail;
-        externalID : ExternalID;
+        anonymized : Anonymized;
+        identities : Composition of many UserIdentities
+                         on identities.user = $self @title : 'Identities';
+        profiles   : Composition of many UserProfiles
+                         on profiles.user = $self   @title : 'Profiles';
+}
+
+entity UserIdentities : managed {
+    key ID       : GUID;
+        user     : Association to one Users;
+        provider : Provider;
+        identity : Identity;
+}
+
+entity UserProfiles : managed {
+    key ID    : GUID;
+        user  : Association to one Users;
+        eMail : EMail;
 }
 
 type Obsolete : Boolean @title : 'Obsolete';
 type EMail : String @title : 'E-Mail';
-type ExternalID : String @title : 'External ID';
+type Identity : String @title : 'External Identity ID';
+type Provider : String @title : 'External Identity Provider';
+type Anonymized : Boolean @title : 'Anonymized';

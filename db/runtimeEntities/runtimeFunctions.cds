@@ -27,6 +27,7 @@ using {
     Sequence,
     Level,
     Value,
+    Statement,
 } from '../commonTypes';
 
 using {
@@ -67,13 +68,13 @@ entity RuntimeFunctions : managed {
         masterDataHierarchyView : MasterDataHierarchyView;
         calculationView         : CalculationView;
         workBook                : Workbook;
+        resultModelTable        : Association to one RuntimeFunctions           @title : 'Result Model Table';
         processChains           : Composition of many RuntimeProcessChains
                                       on processChains.function = $self         @title : 'Process Chains';
         inputFunctions          : Composition of many RuntimeInputFunctions
                                       on inputFunctions.function = $self        @title : 'Input Functions';
         outputFields            : Composition of many RuntimeOutputFields
                                       on outputFields.function = $self          @title : 'Output Fields';
-        resultFunction          : ResultFunction                                @title : 'Result Function';
         shareLocks              : Composition of many RuntimeShareLocks
                                       on shareLocks.function = $self            @title : 'Share Locks';
 }
@@ -90,10 +91,13 @@ entity RuntimeShareLocks : managed {
         partitionFieldRangeValue : PartitionFieldRangeValue;
 }
 
+// This entity needs to be filled automatically during generation for the activated function and potentially all subsequent activated functions
 entity RuntimeOutputFields : managed {
     key ID       : GUID;
+        environment              : Environment;
+        version                  : Version;
         function : Association to one RuntimeFunctions;
-        field    : Association to one RuntimeFields;
+        field    : Field;
 }
 
 entity RuntimeProcessChains : managed {
@@ -147,10 +151,8 @@ entity RuntimeFunctionStates : CodeList {
 
 type AppServerStatement : LargeString @title : 'App Server Statement';
 type PreStatement : LargeString @title : 'Pre-Statement';
-type Statement : LargeString @title : 'Statement';
 type PostStatement : LargeString @title : 'Post-Statement';
 type InputFunction : Function @title : 'Input function';
-type ResultFunction : Function @title : 'Result Model Table';
 type MasterDataHierarchyView : HanaView @title : 'Master data and Hierarchy View';
 type CalculationView : HanaView @title : 'Calculation View';
 type Synonym : HanaView @title : 'Synonym';

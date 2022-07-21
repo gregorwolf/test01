@@ -68,7 +68,7 @@ CREATE TABLE Fields (
   FOREIGN KEY(calculationHierarchy_ID)
   REFERENCES FieldHierarchies(ID)
   DEFERRABLE INITIALLY DEFERRED,
-  CONSTRAINT Fields_field UNIQUE (environment_ID, field),
+  CONSTRAINT Fields_fieldname UNIQUE (environment_ID, field),
   CONSTRAINT Fields_fieldDescription UNIQUE (environment_ID, description)
 );
 
@@ -1680,7 +1680,9 @@ CREATE TABLE Derivations (
   partition_ID NVARCHAR(36),
   inputFunction_ID NVARCHAR(36),
   ID NVARCHAR(36) NOT NULL,
-  type_code NVARCHAR(10) DEFAULT 'RELATIVE',
+  type_code NVARCHAR(10) DEFAULT 'DERIVATION',
+  suppressInitialResults BOOLEAN,
+  ensureDistinctResults BOOLEAN,
   PRIMARY KEY(ID),
   CONSTRAINT c__Derivations_environment
   FOREIGN KEY(environment_ID)
@@ -1982,7 +1984,7 @@ CREATE TABLE DerivationChecks (
 CREATE TABLE DerivationTypes (
   name NVARCHAR(255),
   descr NVARCHAR(1000),
-  code NVARCHAR(10) NOT NULL DEFAULT 'RELATIVE',
+  code NVARCHAR(10) NOT NULL DEFAULT 'DERIVATION',
   PRIMARY KEY(code)
 );
 
@@ -2466,7 +2468,7 @@ CREATE TABLE JoinRules (
   ID NVARCHAR(36) NOT NULL,
   Join_ID NVARCHAR(36),
   parent_ID NVARCHAR(36),
-  type_code NVARCHAR(10) DEFAULT 'VIEW',
+  type_code NVARCHAR(12) DEFAULT 'PROJECTION',
   inputFunction_ID NVARCHAR(36),
   joinType_code NVARCHAR(10) DEFAULT 'FROM',
   complexPredicates NCLOB,
@@ -2664,7 +2666,7 @@ CREATE TABLE JoinTypes (
 CREATE TABLE JoinRuleTypes (
   name NVARCHAR(255),
   descr NVARCHAR(1000),
-  code NVARCHAR(10) NOT NULL DEFAULT 'VIEW',
+  code NVARCHAR(12) NOT NULL DEFAULT 'PROJECTION',
   PRIMARY KEY(code)
 );
 
@@ -2949,6 +2951,329 @@ CREATE TABLE QueryFieldAggregations (
   PRIMARY KEY(code)
 );
 
+CREATE TABLE ApplicationLogs (
+  createdAt TIMESTAMP_TEXT,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP_TEXT,
+  modifiedBy NVARCHAR(255),
+  ID NVARCHAR(36) NOT NULL,
+  run NVARCHAR(36),
+  type NVARCHAR(5000),
+  environment NVARCHAR(5000),
+  version NVARCHAR(5000),
+  process NVARCHAR(5000),
+  activity NVARCHAR(5000),
+  mainFunction NVARCHAR(5000),
+  parameters NCLOB,
+  selections NCLOB,
+  businessEvent NVARCHAR(5000),
+  field NVARCHAR(5000),
+  "check" NVARCHAR(5000),
+  conversion NVARCHAR(5000),
+  "partition" NVARCHAR(5000),
+  package NVARCHAR(5000),
+  state_code NVARCHAR(10) DEFAULT 'OK',
+  PRIMARY KEY(ID),
+  CONSTRAINT c__ApplicationLogs_state
+  FOREIGN KEY(state_code)
+  REFERENCES ApplicationLogStates(code)
+  DEFERRABLE INITIALLY DEFERRED
+);
+
+CREATE TABLE ApplicationLogStatistics (
+  createdAt TIMESTAMP_TEXT,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP_TEXT,
+  modifiedBy NVARCHAR(255),
+  ID NVARCHAR(36) NOT NULL,
+  applicationLog_ID NVARCHAR(36),
+  function NVARCHAR(5000),
+  startTimestamp TIMESTAMP_TEXT,
+  endTimestamp TIMESTAMP_TEXT,
+  inputRecords BIGINT,
+  resultRecords BIGINT,
+  successRecords BIGINT,
+  warningRecords BIGINT,
+  errorRecords BIGINT,
+  abortRecords BIGINT,
+  inputDuration DECIMAL,
+  processingDuration DECIMAL,
+  outputDuration DECIMAL,
+  PRIMARY KEY(ID),
+  CONSTRAINT c__ApplicationLogStatistics_applicationLog
+  FOREIGN KEY(applicationLog_ID)
+  REFERENCES ApplicationLogs(ID)
+  ON DELETE CASCADE
+  DEFERRABLE INITIALLY DEFERRED
+);
+
+CREATE TABLE ApplicationLogMessages (
+  createdAt TIMESTAMP_TEXT,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP_TEXT,
+  modifiedBy NVARCHAR(255),
+  ID NVARCHAR(36) NOT NULL,
+  applicationLog_ID NVARCHAR(36),
+  type_code NVARCHAR(10) DEFAULT 'I',
+  function NVARCHAR(5000),
+  code NVARCHAR(5000),
+  entity NVARCHAR(5000),
+  primaryKey NVARCHAR(5000),
+  target NVARCHAR(5000),
+  argument1 NVARCHAR(5000),
+  argument2 NVARCHAR(5000),
+  argument3 NVARCHAR(5000),
+  argument4 NVARCHAR(5000),
+  argument5 NVARCHAR(5000),
+  argument6 NVARCHAR(5000),
+  messageDetails NCLOB,
+  PRIMARY KEY(ID),
+  CONSTRAINT c__ApplicationLogMessages_applicationLog
+  FOREIGN KEY(applicationLog_ID)
+  REFERENCES ApplicationLogs(ID)
+  ON DELETE CASCADE
+  DEFERRABLE INITIALLY DEFERRED,
+  CONSTRAINT c__ApplicationLogMessages_type
+  FOREIGN KEY(type_code)
+  REFERENCES ApplicationLogMessageTypes(code)
+  DEFERRABLE INITIALLY DEFERRED
+);
+
+CREATE TABLE ApplicationChecks (
+  createdAt TIMESTAMP_TEXT,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP_TEXT,
+  modifiedBy NVARCHAR(255),
+  ID NVARCHAR(36) NOT NULL,
+  environment NVARCHAR(5000),
+  version NVARCHAR(5000),
+  process NVARCHAR(5000),
+  activity NVARCHAR(5000),
+  function NVARCHAR(5000),
+  "check" NVARCHAR(5000),
+  type_code NVARCHAR(10) DEFAULT 'I',
+  message NVARCHAR(5000),
+  statement NCLOB,
+  PRIMARY KEY(ID),
+  CONSTRAINT c__ApplicationChecks_type
+  FOREIGN KEY(type_code)
+  REFERENCES ApplicationLogMessageTypes(code)
+  DEFERRABLE INITIALLY DEFERRED
+);
+
+CREATE TABLE ApplicationLogStates (
+  name NVARCHAR(255),
+  descr NVARCHAR(1000),
+  code NVARCHAR(10) NOT NULL DEFAULT 'OK',
+  PRIMARY KEY(code)
+);
+
+CREATE TABLE ApplicationLogMessageTypes (
+  name NVARCHAR(255),
+  descr NVARCHAR(1000),
+  code NVARCHAR(10) NOT NULL DEFAULT 'I',
+  PRIMARY KEY(code)
+);
+
+CREATE TABLE RuntimeFunctions (
+  createdAt TIMESTAMP_TEXT,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP_TEXT,
+  modifiedBy NVARCHAR(255),
+  ID NVARCHAR(36) NOT NULL,
+  environment NVARCHAR(5000),
+  version NVARCHAR(5000),
+  process NVARCHAR(5000),
+  activity NVARCHAR(5000),
+  function NVARCHAR(5000),
+  description NVARCHAR(5000),
+  type_code NVARCHAR(10) DEFAULT 'MT',
+  state_code NVARCHAR(10) DEFAULT 'CHECKED',
+  processingType_code NVARCHAR(10) DEFAULT '',
+  businessEventType_code NVARCHAR(10) DEFAULT '',
+  partition_ID NVARCHAR(36),
+  storedProcedure NVARCHAR(5000),
+  appServerStatement NCLOB,
+  preStatement NCLOB,
+  statement NCLOB,
+  postStatement NCLOB,
+  hanaTable NVARCHAR(5000),
+  hanaView NVARCHAR(5000),
+  synonym NVARCHAR(5000),
+  masterDataHierarchyView NVARCHAR(5000),
+  calculationView NVARCHAR(5000),
+  workBook NCLOB,
+  resultModelTable_ID NVARCHAR(36),
+  PRIMARY KEY(ID),
+  CONSTRAINT c__RuntimeFunctions_type
+  FOREIGN KEY(type_code)
+  REFERENCES FunctionTypes(code)
+  DEFERRABLE INITIALLY DEFERRED,
+  CONSTRAINT c__RuntimeFunctions_state
+  FOREIGN KEY(state_code)
+  REFERENCES RuntimeFunctionStates(code)
+  DEFERRABLE INITIALLY DEFERRED,
+  CONSTRAINT c__RuntimeFunctions_processingType
+  FOREIGN KEY(processingType_code)
+  REFERENCES FunctionProcessingTypes(code)
+  DEFERRABLE INITIALLY DEFERRED,
+  CONSTRAINT c__RuntimeFunctions_businessEventType
+  FOREIGN KEY(businessEventType_code)
+  REFERENCES FunctionBusinessEventTypes(code)
+  DEFERRABLE INITIALLY DEFERRED,
+  CONSTRAINT c__RuntimeFunctions_partition
+  FOREIGN KEY(partition_ID)
+  REFERENCES RuntimePartitions(ID)
+  DEFERRABLE INITIALLY DEFERRED,
+  CONSTRAINT c__RuntimeFunctions_resultModelTable
+  FOREIGN KEY(resultModelTable_ID)
+  REFERENCES RuntimeFunctions(ID)
+  DEFERRABLE INITIALLY DEFERRED
+);
+
+CREATE TABLE RuntimeShareLocks (
+  createdAt TIMESTAMP_TEXT,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP_TEXT,
+  modifiedBy NVARCHAR(255),
+  ID NVARCHAR(36) NOT NULL,
+  function_ID NVARCHAR(36),
+  environment NVARCHAR(5000),
+  version NVARCHAR(5000),
+  process NVARCHAR(5000),
+  activity NVARCHAR(5000),
+  partitionField_ID NVARCHAR(36),
+  partitionFieldRangeValue NVARCHAR(5000),
+  PRIMARY KEY(ID),
+  CONSTRAINT c__RuntimeShareLocks_function
+  FOREIGN KEY(function_ID)
+  REFERENCES RuntimeFunctions(ID)
+  ON DELETE CASCADE
+  DEFERRABLE INITIALLY DEFERRED,
+  CONSTRAINT c__RuntimeShareLocks_partitionField
+  FOREIGN KEY(partitionField_ID)
+  REFERENCES RuntimeFields(ID)
+  DEFERRABLE INITIALLY DEFERRED
+);
+
+CREATE TABLE RuntimeOutputFields (
+  createdAt TIMESTAMP_TEXT,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP_TEXT,
+  modifiedBy NVARCHAR(255),
+  ID NVARCHAR(36) NOT NULL,
+  function_ID NVARCHAR(36),
+  field_ID NVARCHAR(36),
+  PRIMARY KEY(ID),
+  CONSTRAINT c__RuntimeOutputFields_function
+  FOREIGN KEY(function_ID)
+  REFERENCES RuntimeFunctions(ID)
+  ON DELETE CASCADE
+  DEFERRABLE INITIALLY DEFERRED,
+  CONSTRAINT c__RuntimeOutputFields_field
+  FOREIGN KEY(field_ID)
+  REFERENCES RuntimeFields(ID)
+  DEFERRABLE INITIALLY DEFERRED
+);
+
+CREATE TABLE RuntimeProcessChains (
+  createdAt TIMESTAMP_TEXT,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP_TEXT,
+  modifiedBy NVARCHAR(255),
+  ID NVARCHAR(36) NOT NULL,
+  function_ID NVARCHAR(36),
+  level INTEGER,
+  PRIMARY KEY(ID),
+  CONSTRAINT c__RuntimeProcessChains_function
+  FOREIGN KEY(function_ID)
+  REFERENCES RuntimeFunctions(ID)
+  ON DELETE CASCADE
+  DEFERRABLE INITIALLY DEFERRED
+);
+
+CREATE TABLE RuntimeProcessChainFunctions (
+  createdAt TIMESTAMP_TEXT,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP_TEXT,
+  modifiedBy NVARCHAR(255),
+  ID NVARCHAR(36) NOT NULL,
+  processChain_ID NVARCHAR(36),
+  function_ID NVARCHAR(36),
+  PRIMARY KEY(ID),
+  CONSTRAINT c__RuntimeProcessChainFunctions_processChain
+  FOREIGN KEY(processChain_ID)
+  REFERENCES RuntimeProcessChains(ID)
+  ON DELETE CASCADE
+  DEFERRABLE INITIALLY DEFERRED,
+  CONSTRAINT c__RuntimeProcessChainFunctions_function
+  FOREIGN KEY(function_ID)
+  REFERENCES RuntimeFunctions(ID)
+  DEFERRABLE INITIALLY DEFERRED
+);
+
+CREATE TABLE RuntimeInputFunctions (
+  createdAt TIMESTAMP_TEXT,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP_TEXT,
+  modifiedBy NVARCHAR(255),
+  ID NVARCHAR(36) NOT NULL,
+  function_ID NVARCHAR(36),
+  inputFunction_ID NVARCHAR(36),
+  PRIMARY KEY(ID),
+  CONSTRAINT c__RuntimeInputFunctions_function
+  FOREIGN KEY(function_ID)
+  REFERENCES RuntimeFunctions(ID)
+  ON DELETE CASCADE
+  DEFERRABLE INITIALLY DEFERRED,
+  CONSTRAINT c__RuntimeInputFunctions_inputFunction
+  FOREIGN KEY(inputFunction_ID)
+  REFERENCES RuntimeFunctions(ID)
+  DEFERRABLE INITIALLY DEFERRED
+);
+
+CREATE TABLE RuntimePartitions (
+  createdAt TIMESTAMP_TEXT,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP_TEXT,
+  modifiedBy NVARCHAR(255),
+  ID NVARCHAR(36) NOT NULL,
+  "partition" NVARCHAR(5000),
+  description NVARCHAR(5000),
+  field_ID NVARCHAR(36),
+  PRIMARY KEY(ID),
+  CONSTRAINT c__RuntimePartitions_field
+  FOREIGN KEY(field_ID)
+  REFERENCES RuntimeFields(ID)
+  DEFERRABLE INITIALLY DEFERRED
+);
+
+CREATE TABLE RuntimePartitionRanges (
+  createdAt TIMESTAMP_TEXT,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP_TEXT,
+  modifiedBy NVARCHAR(255),
+  ID NVARCHAR(36) NOT NULL,
+  partition_ID NVARCHAR(36),
+  "range" NVARCHAR(5000),
+  sequence INTEGER,
+  level INTEGER DEFAULT 0,
+  value NVARCHAR(5000),
+  PRIMARY KEY(ID),
+  CONSTRAINT c__RuntimePartitionRanges_partition
+  FOREIGN KEY(partition_ID)
+  REFERENCES RuntimePartitions(ID)
+  ON DELETE CASCADE
+  DEFERRABLE INITIALLY DEFERRED
+);
+
+CREATE TABLE RuntimeFunctionStates (
+  name NVARCHAR(255),
+  descr NVARCHAR(1000),
+  code NVARCHAR(10) NOT NULL DEFAULT 'CHECKED',
+  PRIMARY KEY(code)
+);
+
 CREATE TABLE MessageTypes (
   name NVARCHAR(255),
   descr NVARCHAR(1000),
@@ -3022,6 +3347,43 @@ CREATE TABLE ConnectionSources (
   descr NVARCHAR(1000),
   code NVARCHAR(10) NOT NULL DEFAULT 'HANA_VIEW',
   PRIMARY KEY(code)
+);
+
+CREATE TABLE RuntimeFields (
+  createdAt TIMESTAMP_TEXT,
+  createdBy NVARCHAR(255),
+  modifiedAt TIMESTAMP_TEXT,
+  modifiedBy NVARCHAR(255),
+  ID NVARCHAR(36) NOT NULL,
+  field NVARCHAR(5000),
+  environment NVARCHAR(5000),
+  version NVARCHAR(5000),
+  class_code NVARCHAR(5000) DEFAULT '',
+  type_code NVARCHAR(5000) DEFAULT 'CHA',
+  hanaDataType_code NVARCHAR(5000) DEFAULT 'NVARCHAR',
+  dataLength INTEGER DEFAULT 16,
+  dataDecimals INTEGER DEFAULT 0,
+  unitField_ID NVARCHAR(36),
+  isLowercase BOOLEAN DEFAULT TRUE,
+  hasMasterData BOOLEAN DEFAULT FALSE,
+  hasHierarchies BOOLEAN DEFAULT FALSE,
+  calculationHierarchy NVARCHAR(5000),
+  masterDataHanaView NVARCHAR(5000),
+  description NVARCHAR(5000),
+  documentation NCLOB,
+  PRIMARY KEY(ID),
+  CONSTRAINT c__RuntimeFields_class
+  FOREIGN KEY(class_code)
+  REFERENCES FieldClasses(code)
+  DEFERRABLE INITIALLY DEFERRED,
+  CONSTRAINT c__RuntimeFields_type
+  FOREIGN KEY(type_code)
+  REFERENCES FieldTypes(code)
+  DEFERRABLE INITIALLY DEFERRED,
+  CONSTRAINT c__RuntimeFields_hanaDataType
+  FOREIGN KEY(hanaDataType_code)
+  REFERENCES HanaDataTypes(code)
+  DEFERRABLE INITIALLY DEFERRED
 );
 
 CREATE TABLE EnvironmentTypes_texts (
@@ -3172,7 +3534,7 @@ CREATE TABLE DerivationTypes_texts (
   locale NVARCHAR(14) NOT NULL,
   name NVARCHAR(255),
   descr NVARCHAR(1000),
-  code NVARCHAR(10) NOT NULL DEFAULT 'RELATIVE',
+  code NVARCHAR(10) NOT NULL DEFAULT 'DERIVATION',
   PRIMARY KEY(locale, code)
 );
 
@@ -3228,7 +3590,7 @@ CREATE TABLE JoinRuleTypes_texts (
   locale NVARCHAR(14) NOT NULL,
   name NVARCHAR(255),
   descr NVARCHAR(1000),
-  code NVARCHAR(10) NOT NULL DEFAULT 'VIEW',
+  code NVARCHAR(12) NOT NULL DEFAULT 'PROJECTION',
   PRIMARY KEY(locale, code)
 );
 
@@ -3325,6 +3687,30 @@ CREATE TABLE QueryFieldAggregations_texts (
   name NVARCHAR(255),
   descr NVARCHAR(1000),
   code NVARCHAR(10) NOT NULL DEFAULT 'SUM',
+  PRIMARY KEY(locale, code)
+);
+
+CREATE TABLE ApplicationLogStates_texts (
+  locale NVARCHAR(14) NOT NULL,
+  name NVARCHAR(255),
+  descr NVARCHAR(1000),
+  code NVARCHAR(10) NOT NULL DEFAULT 'OK',
+  PRIMARY KEY(locale, code)
+);
+
+CREATE TABLE ApplicationLogMessageTypes_texts (
+  locale NVARCHAR(14) NOT NULL,
+  name NVARCHAR(255),
+  descr NVARCHAR(1000),
+  code NVARCHAR(10) NOT NULL DEFAULT 'I',
+  PRIMARY KEY(locale, code)
+);
+
+CREATE TABLE RuntimeFunctionStates_texts (
+  locale NVARCHAR(14) NOT NULL,
+  name NVARCHAR(255),
+  descr NVARCHAR(1000),
+  code NVARCHAR(10) NOT NULL DEFAULT 'CHECKED',
   PRIMARY KEY(locale, code)
 );
 
@@ -4323,7 +4709,9 @@ CREATE TABLE ModelingService_Derivations_drafts (
   partition_ID NVARCHAR(36) NULL,
   inputFunction_ID NVARCHAR(36) NULL,
   ID NVARCHAR(36) NOT NULL,
-  type_code NVARCHAR(10) NULL DEFAULT 'RELATIVE',
+  type_code NVARCHAR(10) NULL DEFAULT 'DERIVATION',
+  suppressInitialResults BOOLEAN NULL,
+  ensureDistinctResults BOOLEAN NULL,
   IsActiveEntity BOOLEAN,
   HasActiveEntity BOOLEAN,
   HasDraftEntity BOOLEAN,
@@ -4576,7 +4964,7 @@ CREATE TABLE ModelingService_JoinRules_drafts (
   ID NVARCHAR(36) NOT NULL,
   Join_ID NVARCHAR(36) NULL,
   parent_ID NVARCHAR(36) NULL,
-  type_code NVARCHAR(10) NULL DEFAULT 'VIEW',
+  type_code NVARCHAR(12) NULL DEFAULT 'PROJECTION',
   inputFunction_ID NVARCHAR(36) NULL,
   joinType_code NVARCHAR(10) NULL DEFAULT 'FROM',
   complexPredicates NCLOB NULL,
@@ -4968,7 +5356,9 @@ CREATE VIEW ModelingService_Derivations AS SELECT
   derivations_0.partition_ID,
   derivations_0.inputFunction_ID,
   derivations_0.ID,
-  derivations_0.type_code
+  derivations_0.type_code,
+  derivations_0.suppressInitialResults,
+  derivations_0.ensureDistinctResults
 FROM Derivations AS derivations_0;
 
 CREATE VIEW ModelingService_Joins AS SELECT
@@ -5001,6 +5391,61 @@ CREATE VIEW ModelingService_Queries AS SELECT
   queries_0.Editable,
   queries_0.inputFunction_ID
 FROM Queries AS queries_0;
+
+CREATE VIEW ModelingService_ApplicationLogs AS SELECT
+  applicationLogs_0.createdAt,
+  applicationLogs_0.createdBy,
+  applicationLogs_0.modifiedAt,
+  applicationLogs_0.modifiedBy,
+  applicationLogs_0.ID,
+  applicationLogs_0.run,
+  applicationLogs_0.type,
+  applicationLogs_0.environment,
+  applicationLogs_0.version,
+  applicationLogs_0.process,
+  applicationLogs_0.activity,
+  applicationLogs_0.mainFunction,
+  applicationLogs_0.parameters,
+  applicationLogs_0.selections,
+  applicationLogs_0.businessEvent,
+  applicationLogs_0.field,
+  applicationLogs_0."check",
+  applicationLogs_0.conversion,
+  applicationLogs_0."partition",
+  applicationLogs_0.package,
+  applicationLogs_0.state_code
+FROM ApplicationLogs AS applicationLogs_0;
+
+CREATE VIEW ModelingService_RuntimeFunctions AS SELECT
+  runtimeFunctions_0.createdAt,
+  runtimeFunctions_0.createdBy,
+  runtimeFunctions_0.modifiedAt,
+  runtimeFunctions_0.modifiedBy,
+  runtimeFunctions_0.ID,
+  runtimeFunctions_0.environment,
+  runtimeFunctions_0.version,
+  runtimeFunctions_0.process,
+  runtimeFunctions_0.activity,
+  runtimeFunctions_0.function,
+  runtimeFunctions_0.description,
+  runtimeFunctions_0.type_code,
+  runtimeFunctions_0.state_code,
+  runtimeFunctions_0.processingType_code,
+  runtimeFunctions_0.businessEventType_code,
+  runtimeFunctions_0.partition_ID,
+  runtimeFunctions_0.storedProcedure,
+  runtimeFunctions_0.appServerStatement,
+  runtimeFunctions_0.preStatement,
+  runtimeFunctions_0.statement,
+  runtimeFunctions_0.postStatement,
+  runtimeFunctions_0.hanaTable,
+  runtimeFunctions_0.hanaView,
+  runtimeFunctions_0.synonym,
+  runtimeFunctions_0.masterDataHierarchyView,
+  runtimeFunctions_0.calculationView,
+  runtimeFunctions_0.workBook,
+  runtimeFunctions_0.resultModelTable_ID
+FROM RuntimeFunctions AS runtimeFunctions_0;
 
 CREATE VIEW EnvironmentFolders AS SELECT
   Environments_0.createdAt,
@@ -5834,6 +6279,117 @@ CREATE VIEW ModelingService_QueryComponents AS SELECT
   QueryComponents_0.keyfigure_ID
 FROM QueryComponents AS QueryComponents_0;
 
+CREATE VIEW ModelingService_ApplicationLogStates AS SELECT
+  ApplicationLogStates_0.name,
+  ApplicationLogStates_0.descr,
+  ApplicationLogStates_0.code
+FROM ApplicationLogStates AS ApplicationLogStates_0;
+
+CREATE VIEW ModelingService_ApplicationLogMessages AS SELECT
+  ApplicationLogMessages_0.createdAt,
+  ApplicationLogMessages_0.createdBy,
+  ApplicationLogMessages_0.modifiedAt,
+  ApplicationLogMessages_0.modifiedBy,
+  ApplicationLogMessages_0.ID,
+  ApplicationLogMessages_0.applicationLog_ID,
+  ApplicationLogMessages_0.type_code,
+  ApplicationLogMessages_0.function,
+  ApplicationLogMessages_0.code,
+  ApplicationLogMessages_0.entity,
+  ApplicationLogMessages_0.primaryKey,
+  ApplicationLogMessages_0.target,
+  ApplicationLogMessages_0.argument1,
+  ApplicationLogMessages_0.argument2,
+  ApplicationLogMessages_0.argument3,
+  ApplicationLogMessages_0.argument4,
+  ApplicationLogMessages_0.argument5,
+  ApplicationLogMessages_0.argument6,
+  ApplicationLogMessages_0.messageDetails
+FROM ApplicationLogMessages AS ApplicationLogMessages_0;
+
+CREATE VIEW ModelingService_ApplicationLogStatistics AS SELECT
+  ApplicationLogStatistics_0.createdAt,
+  ApplicationLogStatistics_0.createdBy,
+  ApplicationLogStatistics_0.modifiedAt,
+  ApplicationLogStatistics_0.modifiedBy,
+  ApplicationLogStatistics_0.ID,
+  ApplicationLogStatistics_0.applicationLog_ID,
+  ApplicationLogStatistics_0.function,
+  ApplicationLogStatistics_0.startTimestamp,
+  ApplicationLogStatistics_0.endTimestamp,
+  ApplicationLogStatistics_0.inputRecords,
+  ApplicationLogStatistics_0.resultRecords,
+  ApplicationLogStatistics_0.successRecords,
+  ApplicationLogStatistics_0.warningRecords,
+  ApplicationLogStatistics_0.errorRecords,
+  ApplicationLogStatistics_0.abortRecords,
+  ApplicationLogStatistics_0.inputDuration,
+  ApplicationLogStatistics_0.processingDuration,
+  ApplicationLogStatistics_0.outputDuration
+FROM ApplicationLogStatistics AS ApplicationLogStatistics_0;
+
+CREATE VIEW ModelingService_RuntimeFunctionStates AS SELECT
+  RuntimeFunctionStates_0.name,
+  RuntimeFunctionStates_0.descr,
+  RuntimeFunctionStates_0.code
+FROM RuntimeFunctionStates AS RuntimeFunctionStates_0;
+
+CREATE VIEW ModelingService_RuntimePartitions AS SELECT
+  RuntimePartitions_0.createdAt,
+  RuntimePartitions_0.createdBy,
+  RuntimePartitions_0.modifiedAt,
+  RuntimePartitions_0.modifiedBy,
+  RuntimePartitions_0.ID,
+  RuntimePartitions_0."partition",
+  RuntimePartitions_0.description,
+  RuntimePartitions_0.field_ID
+FROM RuntimePartitions AS RuntimePartitions_0;
+
+CREATE VIEW ModelingService_RuntimeProcessChains AS SELECT
+  RuntimeProcessChains_0.createdAt,
+  RuntimeProcessChains_0.createdBy,
+  RuntimeProcessChains_0.modifiedAt,
+  RuntimeProcessChains_0.modifiedBy,
+  RuntimeProcessChains_0.ID,
+  RuntimeProcessChains_0.function_ID,
+  RuntimeProcessChains_0.level
+FROM RuntimeProcessChains AS RuntimeProcessChains_0;
+
+CREATE VIEW ModelingService_RuntimeInputFunctions AS SELECT
+  RuntimeInputFunctions_0.createdAt,
+  RuntimeInputFunctions_0.createdBy,
+  RuntimeInputFunctions_0.modifiedAt,
+  RuntimeInputFunctions_0.modifiedBy,
+  RuntimeInputFunctions_0.ID,
+  RuntimeInputFunctions_0.function_ID,
+  RuntimeInputFunctions_0.inputFunction_ID
+FROM RuntimeInputFunctions AS RuntimeInputFunctions_0;
+
+CREATE VIEW ModelingService_RuntimeOutputFields AS SELECT
+  RuntimeOutputFields_0.createdAt,
+  RuntimeOutputFields_0.createdBy,
+  RuntimeOutputFields_0.modifiedAt,
+  RuntimeOutputFields_0.modifiedBy,
+  RuntimeOutputFields_0.ID,
+  RuntimeOutputFields_0.function_ID,
+  RuntimeOutputFields_0.field_ID
+FROM RuntimeOutputFields AS RuntimeOutputFields_0;
+
+CREATE VIEW ModelingService_RuntimeShareLocks AS SELECT
+  RuntimeShareLocks_0.createdAt,
+  RuntimeShareLocks_0.createdBy,
+  RuntimeShareLocks_0.modifiedAt,
+  RuntimeShareLocks_0.modifiedBy,
+  RuntimeShareLocks_0.ID,
+  RuntimeShareLocks_0.function_ID,
+  RuntimeShareLocks_0.environment,
+  RuntimeShareLocks_0.version,
+  RuntimeShareLocks_0.process,
+  RuntimeShareLocks_0.activity,
+  RuntimeShareLocks_0.partitionField_ID,
+  RuntimeShareLocks_0.partitionFieldRangeValue
+FROM RuntimeShareLocks AS RuntimeShareLocks_0;
+
 CREATE VIEW ModelingService_EnvironmentTypes_texts AS SELECT
   texts_0.locale,
   texts_0.name,
@@ -6368,6 +6924,49 @@ CREATE VIEW ModelingService_QueryComponentSelections AS SELECT
   QueryComponentSelections_0.component_ID
 FROM QueryComponentSelections AS QueryComponentSelections_0;
 
+CREATE VIEW ModelingService_ApplicationLogStates_texts AS SELECT
+  texts_0.locale,
+  texts_0.name,
+  texts_0.descr,
+  texts_0.code
+FROM ApplicationLogStates_texts AS texts_0;
+
+CREATE VIEW ModelingService_ApplicationLogMessageTypes AS SELECT
+  ApplicationLogMessageTypes_0.name,
+  ApplicationLogMessageTypes_0.descr,
+  ApplicationLogMessageTypes_0.code
+FROM ApplicationLogMessageTypes AS ApplicationLogMessageTypes_0;
+
+CREATE VIEW ModelingService_RuntimeFunctionStates_texts AS SELECT
+  texts_0.locale,
+  texts_0.name,
+  texts_0.descr,
+  texts_0.code
+FROM RuntimeFunctionStates_texts AS texts_0;
+
+CREATE VIEW ModelingService_RuntimePartitionRanges AS SELECT
+  RuntimePartitionRanges_0.createdAt,
+  RuntimePartitionRanges_0.createdBy,
+  RuntimePartitionRanges_0.modifiedAt,
+  RuntimePartitionRanges_0.modifiedBy,
+  RuntimePartitionRanges_0.ID,
+  RuntimePartitionRanges_0.partition_ID,
+  RuntimePartitionRanges_0."range",
+  RuntimePartitionRanges_0.sequence,
+  RuntimePartitionRanges_0.level,
+  RuntimePartitionRanges_0.value
+FROM RuntimePartitionRanges AS RuntimePartitionRanges_0;
+
+CREATE VIEW ModelingService_RuntimeProcessChainFunctions AS SELECT
+  RuntimeProcessChainFunctions_0.createdAt,
+  RuntimeProcessChainFunctions_0.createdBy,
+  RuntimeProcessChainFunctions_0.modifiedAt,
+  RuntimeProcessChainFunctions_0.modifiedBy,
+  RuntimeProcessChainFunctions_0.ID,
+  RuntimeProcessChainFunctions_0.processChain_ID,
+  RuntimeProcessChainFunctions_0.function_ID
+FROM RuntimeProcessChainFunctions AS RuntimeProcessChainFunctions_0;
+
 CREATE VIEW ModelingService_Signs AS SELECT
   Signs_0.name,
   Signs_0.descr,
@@ -6626,6 +7225,13 @@ CREATE VIEW ModelingService_QueryFieldScalingFactors_texts AS SELECT
   texts_0.descr,
   texts_0.code
 FROM QueryFieldScalingFactors_texts AS texts_0;
+
+CREATE VIEW ModelingService_ApplicationLogMessageTypes_texts AS SELECT
+  texts_0.locale,
+  texts_0.name,
+  texts_0.descr,
+  texts_0.code
+FROM ApplicationLogMessageTypes_texts AS texts_0;
 
 CREATE VIEW ModelingService_Signs_texts AS SELECT
   texts_0.locale,
@@ -6896,6 +7502,24 @@ CREATE VIEW localized_QueryFieldAggregations AS SELECT
   coalesce(localized_1.descr, L_0.descr) AS descr,
   L_0.code
 FROM (QueryFieldAggregations AS L_0 LEFT JOIN QueryFieldAggregations_texts AS localized_1 ON localized_1.code = L_0.code AND localized_1.locale = 'en');
+
+CREATE VIEW localized_ApplicationLogStates AS SELECT
+  coalesce(localized_1.name, L_0.name) AS name,
+  coalesce(localized_1.descr, L_0.descr) AS descr,
+  L_0.code
+FROM (ApplicationLogStates AS L_0 LEFT JOIN ApplicationLogStates_texts AS localized_1 ON localized_1.code = L_0.code AND localized_1.locale = 'en');
+
+CREATE VIEW localized_ApplicationLogMessageTypes AS SELECT
+  coalesce(localized_1.name, L_0.name) AS name,
+  coalesce(localized_1.descr, L_0.descr) AS descr,
+  L_0.code
+FROM (ApplicationLogMessageTypes AS L_0 LEFT JOIN ApplicationLogMessageTypes_texts AS localized_1 ON localized_1.code = L_0.code AND localized_1.locale = 'en');
+
+CREATE VIEW localized_RuntimeFunctionStates AS SELECT
+  coalesce(localized_1.name, L_0.name) AS name,
+  coalesce(localized_1.descr, L_0.descr) AS descr,
+  L_0.code
+FROM (RuntimeFunctionStates AS L_0 LEFT JOIN RuntimeFunctionStates_texts AS localized_1 ON localized_1.code = L_0.code AND localized_1.locale = 'en');
 
 CREATE VIEW localized_MessageTypes AS SELECT
   coalesce(localized_1.name, L_0.name) AS name,
@@ -7279,7 +7903,9 @@ CREATE VIEW localized_Derivations AS SELECT
   L.partition_ID,
   L.inputFunction_ID,
   L.ID,
-  L.type_code
+  L.type_code,
+  L.suppressInitialResults,
+  L.ensureDistinctResults
 FROM Derivations AS L;
 
 CREATE VIEW localized_DerivationInputFields AS SELECT
@@ -7553,6 +8179,100 @@ CREATE VIEW localized_QueryComponentSelections AS SELECT
   L.component_ID
 FROM QueryComponentSelections AS L;
 
+CREATE VIEW localized_ApplicationLogs AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.run,
+  L.type,
+  L.environment,
+  L.version,
+  L.process,
+  L.activity,
+  L.mainFunction,
+  L.parameters,
+  L.selections,
+  L.businessEvent,
+  L.field,
+  L."check",
+  L.conversion,
+  L."partition",
+  L.package,
+  L.state_code
+FROM ApplicationLogs AS L;
+
+CREATE VIEW localized_ApplicationLogMessages AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.applicationLog_ID,
+  L.type_code,
+  L.function,
+  L.code,
+  L.entity,
+  L.primaryKey,
+  L.target,
+  L.argument1,
+  L.argument2,
+  L.argument3,
+  L.argument4,
+  L.argument5,
+  L.argument6,
+  L.messageDetails
+FROM ApplicationLogMessages AS L;
+
+CREATE VIEW localized_ApplicationChecks AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.environment,
+  L.version,
+  L.process,
+  L.activity,
+  L.function,
+  L."check",
+  L.type_code,
+  L.message,
+  L.statement
+FROM ApplicationChecks AS L;
+
+CREATE VIEW localized_RuntimeFunctions AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.environment,
+  L.version,
+  L.process,
+  L.activity,
+  L.function,
+  L.description,
+  L.type_code,
+  L.state_code,
+  L.processingType_code,
+  L.businessEventType_code,
+  L.partition_ID,
+  L.storedProcedure,
+  L.appServerStatement,
+  L.preStatement,
+  L.statement,
+  L.postStatement,
+  L.hanaTable,
+  L.hanaView,
+  L.synonym,
+  L.masterDataHierarchyView,
+  L.calculationView,
+  L.workBook,
+  L.resultModelTable_ID
+FROM RuntimeFunctions AS L;
+
 CREATE VIEW localized_Connections AS SELECT
   L.createdAt,
   L.createdBy,
@@ -7568,6 +8288,30 @@ CREATE VIEW localized_Connections AS SELECT
   L.odataUrl,
   L.odataUrlOptions
 FROM Connections AS L;
+
+CREATE VIEW localized_RuntimeFields AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.field,
+  L.environment,
+  L.version,
+  L.class_code,
+  L.type_code,
+  L.hanaDataType_code,
+  L.dataLength,
+  L.dataDecimals,
+  L.unitField_ID,
+  L.isLowercase,
+  L.hasMasterData,
+  L.hasHierarchies,
+  L.calculationHierarchy,
+  L.masterDataHanaView,
+  L.description,
+  L.documentation
+FROM RuntimeFields AS L;
 
 CREATE VIEW localized_FieldValues AS SELECT
   L.createdAt,
@@ -8053,6 +8797,106 @@ CREATE VIEW localized_CheckFields AS SELECT
   L.check_ID,
   L.field_ID
 FROM CheckFields AS L;
+
+CREATE VIEW localized_ApplicationLogStatistics AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.applicationLog_ID,
+  L.function,
+  L.startTimestamp,
+  L.endTimestamp,
+  L.inputRecords,
+  L.resultRecords,
+  L.successRecords,
+  L.warningRecords,
+  L.errorRecords,
+  L.abortRecords,
+  L.inputDuration,
+  L.processingDuration,
+  L.outputDuration
+FROM ApplicationLogStatistics AS L;
+
+CREATE VIEW localized_RuntimeShareLocks AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.function_ID,
+  L.environment,
+  L.version,
+  L.process,
+  L.activity,
+  L.partitionField_ID,
+  L.partitionFieldRangeValue
+FROM RuntimeShareLocks AS L;
+
+CREATE VIEW localized_RuntimeOutputFields AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.function_ID,
+  L.field_ID
+FROM RuntimeOutputFields AS L;
+
+CREATE VIEW localized_RuntimeProcessChains AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.function_ID,
+  L.level
+FROM RuntimeProcessChains AS L;
+
+CREATE VIEW localized_RuntimeProcessChainFunctions AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.processChain_ID,
+  L.function_ID
+FROM RuntimeProcessChainFunctions AS L;
+
+CREATE VIEW localized_RuntimeInputFunctions AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.function_ID,
+  L.inputFunction_ID
+FROM RuntimeInputFunctions AS L;
+
+CREATE VIEW localized_RuntimePartitions AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L."partition",
+  L.description,
+  L.field_ID
+FROM RuntimePartitions AS L;
+
+CREATE VIEW localized_RuntimePartitionRanges AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.partition_ID,
+  L."range",
+  L.sequence,
+  L.level,
+  L.value
+FROM RuntimePartitionRanges AS L;
 
 CREATE VIEW ModelingService_DraftAdministrativeData AS SELECT
   DraftAdministrativeData.DraftUUID,
@@ -8664,6 +9508,18 @@ CREATE VIEW localized_ModelingService_JoinTypes AS SELECT
   JoinTypes_0.code
 FROM localized_JoinTypes AS JoinTypes_0;
 
+CREATE VIEW localized_ModelingService_ApplicationLogStates AS SELECT
+  ApplicationLogStates_0.name,
+  ApplicationLogStates_0.descr,
+  ApplicationLogStates_0.code
+FROM localized_ApplicationLogStates AS ApplicationLogStates_0;
+
+CREATE VIEW localized_ModelingService_RuntimeFunctionStates AS SELECT
+  RuntimeFunctionStates_0.name,
+  RuntimeFunctionStates_0.descr,
+  RuntimeFunctionStates_0.code
+FROM localized_RuntimeFunctionStates AS RuntimeFunctionStates_0;
+
 CREATE VIEW localized_ModelingService_ConnectionSources AS SELECT
   ConnectionSources_0.name,
   ConnectionSources_0.descr,
@@ -8790,6 +9646,12 @@ CREATE VIEW localized_ModelingService_QueryFieldScalingFactors AS SELECT
   QueryFieldScalingFactors_0.code
 FROM localized_QueryFieldScalingFactors AS QueryFieldScalingFactors_0;
 
+CREATE VIEW localized_ModelingService_ApplicationLogMessageTypes AS SELECT
+  ApplicationLogMessageTypes_0.name,
+  ApplicationLogMessageTypes_0.descr,
+  ApplicationLogMessageTypes_0.code
+FROM localized_ApplicationLogMessageTypes AS ApplicationLogMessageTypes_0;
+
 CREATE VIEW localized_ModelingService_Signs AS SELECT
   Signs_0.name,
   Signs_0.descr,
@@ -8825,6 +9687,42 @@ CREATE VIEW localized_ModelingService_JoinRulePredicateComparisons AS SELECT
   JoinRulePredicateComparisons_0.descr,
   JoinRulePredicateComparisons_0.code
 FROM localized_JoinRulePredicateComparisons AS JoinRulePredicateComparisons_0;
+
+CREATE VIEW localized_ModelingService_RuntimePartitions AS SELECT
+  RuntimePartitions_0.createdAt,
+  RuntimePartitions_0.createdBy,
+  RuntimePartitions_0.modifiedAt,
+  RuntimePartitions_0.modifiedBy,
+  RuntimePartitions_0.ID,
+  RuntimePartitions_0."partition",
+  RuntimePartitions_0.description,
+  RuntimePartitions_0.field_ID
+FROM localized_RuntimePartitions AS RuntimePartitions_0;
+
+CREATE VIEW localized_ModelingService_RuntimeOutputFields AS SELECT
+  RuntimeOutputFields_0.createdAt,
+  RuntimeOutputFields_0.createdBy,
+  RuntimeOutputFields_0.modifiedAt,
+  RuntimeOutputFields_0.modifiedBy,
+  RuntimeOutputFields_0.ID,
+  RuntimeOutputFields_0.function_ID,
+  RuntimeOutputFields_0.field_ID
+FROM localized_RuntimeOutputFields AS RuntimeOutputFields_0;
+
+CREATE VIEW localized_ModelingService_RuntimeShareLocks AS SELECT
+  RuntimeShareLocks_0.createdAt,
+  RuntimeShareLocks_0.createdBy,
+  RuntimeShareLocks_0.modifiedAt,
+  RuntimeShareLocks_0.modifiedBy,
+  RuntimeShareLocks_0.ID,
+  RuntimeShareLocks_0.function_ID,
+  RuntimeShareLocks_0.environment,
+  RuntimeShareLocks_0.version,
+  RuntimeShareLocks_0.process,
+  RuntimeShareLocks_0.activity,
+  RuntimeShareLocks_0.partitionField_ID,
+  RuntimeShareLocks_0.partitionFieldRangeValue
+FROM localized_RuntimeShareLocks AS RuntimeShareLocks_0;
 
 CREATE VIEW localized_ModelingService_Environments AS SELECT
   environments_0.createdAt,
@@ -8889,6 +9787,37 @@ CREATE VIEW localized_ModelingService_Functions AS SELECT
   functions_0.description,
   functions_0.documentation
 FROM localized_Functions AS functions_0;
+
+CREATE VIEW localized_ModelingService_RuntimeFunctions AS SELECT
+  runtimeFunctions_0.createdAt,
+  runtimeFunctions_0.createdBy,
+  runtimeFunctions_0.modifiedAt,
+  runtimeFunctions_0.modifiedBy,
+  runtimeFunctions_0.ID,
+  runtimeFunctions_0.environment,
+  runtimeFunctions_0.version,
+  runtimeFunctions_0.process,
+  runtimeFunctions_0.activity,
+  runtimeFunctions_0.function,
+  runtimeFunctions_0.description,
+  runtimeFunctions_0.type_code,
+  runtimeFunctions_0.state_code,
+  runtimeFunctions_0.processingType_code,
+  runtimeFunctions_0.businessEventType_code,
+  runtimeFunctions_0.partition_ID,
+  runtimeFunctions_0.storedProcedure,
+  runtimeFunctions_0.appServerStatement,
+  runtimeFunctions_0.preStatement,
+  runtimeFunctions_0.statement,
+  runtimeFunctions_0.postStatement,
+  runtimeFunctions_0.hanaTable,
+  runtimeFunctions_0.hanaView,
+  runtimeFunctions_0.synonym,
+  runtimeFunctions_0.masterDataHierarchyView,
+  runtimeFunctions_0.calculationView,
+  runtimeFunctions_0.workBook,
+  runtimeFunctions_0.resultModelTable_ID
+FROM localized_RuntimeFunctions AS runtimeFunctions_0;
 
 CREATE VIEW localized_ModelingService_Allocations AS SELECT
   allocations_0.createdAt,
@@ -8960,7 +9889,9 @@ CREATE VIEW localized_ModelingService_Derivations AS SELECT
   derivations_0.partition_ID,
   derivations_0.inputFunction_ID,
   derivations_0.ID,
-  derivations_0.type_code
+  derivations_0.type_code,
+  derivations_0.suppressInitialResults,
+  derivations_0.ensureDistinctResults
 FROM localized_Derivations AS derivations_0;
 
 CREATE VIEW localized_ModelingService_Joins AS SELECT
@@ -8994,6 +9925,30 @@ CREATE VIEW localized_ModelingService_ModelTables AS SELECT
   modelTables_0.transportData,
   modelTables_0.connection
 FROM localized_ModelTables AS modelTables_0;
+
+CREATE VIEW localized_ModelingService_ApplicationLogs AS SELECT
+  applicationLogs_0.createdAt,
+  applicationLogs_0.createdBy,
+  applicationLogs_0.modifiedAt,
+  applicationLogs_0.modifiedBy,
+  applicationLogs_0.ID,
+  applicationLogs_0.run,
+  applicationLogs_0.type,
+  applicationLogs_0.environment,
+  applicationLogs_0.version,
+  applicationLogs_0.process,
+  applicationLogs_0.activity,
+  applicationLogs_0.mainFunction,
+  applicationLogs_0.parameters,
+  applicationLogs_0.selections,
+  applicationLogs_0.businessEvent,
+  applicationLogs_0.field,
+  applicationLogs_0."check",
+  applicationLogs_0.conversion,
+  applicationLogs_0."partition",
+  applicationLogs_0.package,
+  applicationLogs_0.state_code
+FROM localized_ApplicationLogs AS applicationLogs_0;
 
 CREATE VIEW localized_ModelingService_Connections AS SELECT
   Connections_0.createdAt,
@@ -9197,6 +10152,28 @@ CREATE VIEW localized_ModelingService_QueryComponents AS SELECT
   QueryComponents_0.formula,
   QueryComponents_0.keyfigure_ID
 FROM localized_QueryComponents AS QueryComponents_0;
+
+CREATE VIEW localized_ModelingService_ApplicationLogMessages AS SELECT
+  ApplicationLogMessages_0.createdAt,
+  ApplicationLogMessages_0.createdBy,
+  ApplicationLogMessages_0.modifiedAt,
+  ApplicationLogMessages_0.modifiedBy,
+  ApplicationLogMessages_0.ID,
+  ApplicationLogMessages_0.applicationLog_ID,
+  ApplicationLogMessages_0.type_code,
+  ApplicationLogMessages_0.function,
+  ApplicationLogMessages_0.code,
+  ApplicationLogMessages_0.entity,
+  ApplicationLogMessages_0.primaryKey,
+  ApplicationLogMessages_0.target,
+  ApplicationLogMessages_0.argument1,
+  ApplicationLogMessages_0.argument2,
+  ApplicationLogMessages_0.argument3,
+  ApplicationLogMessages_0.argument4,
+  ApplicationLogMessages_0.argument5,
+  ApplicationLogMessages_0.argument6,
+  ApplicationLogMessages_0.messageDetails
+FROM localized_ApplicationLogMessages AS ApplicationLogMessages_0;
 
 CREATE VIEW localized_ModelingService_CheckSelections AS SELECT
   CheckSelections_0.createdAt,
@@ -9424,6 +10401,19 @@ CREATE VIEW localized_ModelingService_JoinRulePredicates AS SELECT
   JoinRulePredicates_0.joinField_ID,
   JoinRulePredicates_0.sequence
 FROM localized_JoinRulePredicates AS JoinRulePredicates_0;
+
+CREATE VIEW localized_ModelingService_RuntimePartitionRanges AS SELECT
+  RuntimePartitionRanges_0.createdAt,
+  RuntimePartitionRanges_0.createdBy,
+  RuntimePartitionRanges_0.modifiedAt,
+  RuntimePartitionRanges_0.modifiedBy,
+  RuntimePartitionRanges_0.ID,
+  RuntimePartitionRanges_0.partition_ID,
+  RuntimePartitionRanges_0."range",
+  RuntimePartitionRanges_0.sequence,
+  RuntimePartitionRanges_0.level,
+  RuntimePartitionRanges_0.value
+FROM localized_RuntimePartitionRanges AS RuntimePartitionRanges_0;
 
 CREATE VIEW localized_ModelingService_CurrencyConversions AS SELECT
   currencyConversions_0.createdAt,
@@ -9866,6 +10856,57 @@ CREATE VIEW localized_ModelingService_CheckFields AS SELECT
   CheckFields_0.check_ID,
   CheckFields_0.field_ID
 FROM localized_CheckFields AS CheckFields_0;
+
+CREATE VIEW localized_ModelingService_RuntimeProcessChains AS SELECT
+  RuntimeProcessChains_0.createdAt,
+  RuntimeProcessChains_0.createdBy,
+  RuntimeProcessChains_0.modifiedAt,
+  RuntimeProcessChains_0.modifiedBy,
+  RuntimeProcessChains_0.ID,
+  RuntimeProcessChains_0.function_ID,
+  RuntimeProcessChains_0.level
+FROM localized_RuntimeProcessChains AS RuntimeProcessChains_0;
+
+CREATE VIEW localized_ModelingService_RuntimeInputFunctions AS SELECT
+  RuntimeInputFunctions_0.createdAt,
+  RuntimeInputFunctions_0.createdBy,
+  RuntimeInputFunctions_0.modifiedAt,
+  RuntimeInputFunctions_0.modifiedBy,
+  RuntimeInputFunctions_0.ID,
+  RuntimeInputFunctions_0.function_ID,
+  RuntimeInputFunctions_0.inputFunction_ID
+FROM localized_RuntimeInputFunctions AS RuntimeInputFunctions_0;
+
+CREATE VIEW localized_ModelingService_RuntimeProcessChainFunctions AS SELECT
+  RuntimeProcessChainFunctions_0.createdAt,
+  RuntimeProcessChainFunctions_0.createdBy,
+  RuntimeProcessChainFunctions_0.modifiedAt,
+  RuntimeProcessChainFunctions_0.modifiedBy,
+  RuntimeProcessChainFunctions_0.ID,
+  RuntimeProcessChainFunctions_0.processChain_ID,
+  RuntimeProcessChainFunctions_0.function_ID
+FROM localized_RuntimeProcessChainFunctions AS RuntimeProcessChainFunctions_0;
+
+CREATE VIEW localized_ModelingService_ApplicationLogStatistics AS SELECT
+  ApplicationLogStatistics_0.createdAt,
+  ApplicationLogStatistics_0.createdBy,
+  ApplicationLogStatistics_0.modifiedAt,
+  ApplicationLogStatistics_0.modifiedBy,
+  ApplicationLogStatistics_0.ID,
+  ApplicationLogStatistics_0.applicationLog_ID,
+  ApplicationLogStatistics_0.function,
+  ApplicationLogStatistics_0.startTimestamp,
+  ApplicationLogStatistics_0.endTimestamp,
+  ApplicationLogStatistics_0.inputRecords,
+  ApplicationLogStatistics_0.resultRecords,
+  ApplicationLogStatistics_0.successRecords,
+  ApplicationLogStatistics_0.warningRecords,
+  ApplicationLogStatistics_0.errorRecords,
+  ApplicationLogStatistics_0.abortRecords,
+  ApplicationLogStatistics_0.inputDuration,
+  ApplicationLogStatistics_0.processingDuration,
+  ApplicationLogStatistics_0.outputDuration
+FROM localized_ApplicationLogStatistics AS ApplicationLogStatistics_0;
 
 CREATE VIEW localized_ModelingService_EnvironmentFolders AS SELECT
   EnvironmentFolders_0.createdAt,
@@ -10531,6 +11572,42 @@ CREATE VIEW localized_fr_QueryFieldAggregations AS SELECT
   coalesce(localized_fr_1.descr, L_0.descr) AS descr,
   L_0.code
 FROM (QueryFieldAggregations AS L_0 LEFT JOIN QueryFieldAggregations_texts AS localized_fr_1 ON localized_fr_1.code = L_0.code AND localized_fr_1.locale = 'fr');
+
+CREATE VIEW localized_de_ApplicationLogStates AS SELECT
+  coalesce(localized_de_1.name, L_0.name) AS name,
+  coalesce(localized_de_1.descr, L_0.descr) AS descr,
+  L_0.code
+FROM (ApplicationLogStates AS L_0 LEFT JOIN ApplicationLogStates_texts AS localized_de_1 ON localized_de_1.code = L_0.code AND localized_de_1.locale = 'de');
+
+CREATE VIEW localized_fr_ApplicationLogStates AS SELECT
+  coalesce(localized_fr_1.name, L_0.name) AS name,
+  coalesce(localized_fr_1.descr, L_0.descr) AS descr,
+  L_0.code
+FROM (ApplicationLogStates AS L_0 LEFT JOIN ApplicationLogStates_texts AS localized_fr_1 ON localized_fr_1.code = L_0.code AND localized_fr_1.locale = 'fr');
+
+CREATE VIEW localized_de_ApplicationLogMessageTypes AS SELECT
+  coalesce(localized_de_1.name, L_0.name) AS name,
+  coalesce(localized_de_1.descr, L_0.descr) AS descr,
+  L_0.code
+FROM (ApplicationLogMessageTypes AS L_0 LEFT JOIN ApplicationLogMessageTypes_texts AS localized_de_1 ON localized_de_1.code = L_0.code AND localized_de_1.locale = 'de');
+
+CREATE VIEW localized_fr_ApplicationLogMessageTypes AS SELECT
+  coalesce(localized_fr_1.name, L_0.name) AS name,
+  coalesce(localized_fr_1.descr, L_0.descr) AS descr,
+  L_0.code
+FROM (ApplicationLogMessageTypes AS L_0 LEFT JOIN ApplicationLogMessageTypes_texts AS localized_fr_1 ON localized_fr_1.code = L_0.code AND localized_fr_1.locale = 'fr');
+
+CREATE VIEW localized_de_RuntimeFunctionStates AS SELECT
+  coalesce(localized_de_1.name, L_0.name) AS name,
+  coalesce(localized_de_1.descr, L_0.descr) AS descr,
+  L_0.code
+FROM (RuntimeFunctionStates AS L_0 LEFT JOIN RuntimeFunctionStates_texts AS localized_de_1 ON localized_de_1.code = L_0.code AND localized_de_1.locale = 'de');
+
+CREATE VIEW localized_fr_RuntimeFunctionStates AS SELECT
+  coalesce(localized_fr_1.name, L_0.name) AS name,
+  coalesce(localized_fr_1.descr, L_0.descr) AS descr,
+  L_0.code
+FROM (RuntimeFunctionStates AS L_0 LEFT JOIN RuntimeFunctionStates_texts AS localized_fr_1 ON localized_fr_1.code = L_0.code AND localized_fr_1.locale = 'fr');
 
 CREATE VIEW localized_de_MessageTypes AS SELECT
   coalesce(localized_de_1.name, L_0.name) AS name,
@@ -11280,7 +12357,9 @@ CREATE VIEW localized_de_Derivations AS SELECT
   L.partition_ID,
   L.inputFunction_ID,
   L.ID,
-  L.type_code
+  L.type_code,
+  L.suppressInitialResults,
+  L.ensureDistinctResults
 FROM Derivations AS L;
 
 CREATE VIEW localized_fr_Derivations AS SELECT
@@ -11299,7 +12378,9 @@ CREATE VIEW localized_fr_Derivations AS SELECT
   L.partition_ID,
   L.inputFunction_ID,
   L.ID,
-  L.type_code
+  L.type_code,
+  L.suppressInitialResults,
+  L.ensureDistinctResults
 FROM Derivations AS L;
 
 CREATE VIEW localized_de_DerivationInputFields AS SELECT
@@ -11844,6 +12925,194 @@ CREATE VIEW localized_fr_QueryComponentSelections AS SELECT
   L.component_ID
 FROM QueryComponentSelections AS L;
 
+CREATE VIEW localized_de_ApplicationLogs AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.run,
+  L.type,
+  L.environment,
+  L.version,
+  L.process,
+  L.activity,
+  L.mainFunction,
+  L.parameters,
+  L.selections,
+  L.businessEvent,
+  L.field,
+  L."check",
+  L.conversion,
+  L."partition",
+  L.package,
+  L.state_code
+FROM ApplicationLogs AS L;
+
+CREATE VIEW localized_fr_ApplicationLogs AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.run,
+  L.type,
+  L.environment,
+  L.version,
+  L.process,
+  L.activity,
+  L.mainFunction,
+  L.parameters,
+  L.selections,
+  L.businessEvent,
+  L.field,
+  L."check",
+  L.conversion,
+  L."partition",
+  L.package,
+  L.state_code
+FROM ApplicationLogs AS L;
+
+CREATE VIEW localized_de_ApplicationLogMessages AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.applicationLog_ID,
+  L.type_code,
+  L.function,
+  L.code,
+  L.entity,
+  L.primaryKey,
+  L.target,
+  L.argument1,
+  L.argument2,
+  L.argument3,
+  L.argument4,
+  L.argument5,
+  L.argument6,
+  L.messageDetails
+FROM ApplicationLogMessages AS L;
+
+CREATE VIEW localized_fr_ApplicationLogMessages AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.applicationLog_ID,
+  L.type_code,
+  L.function,
+  L.code,
+  L.entity,
+  L.primaryKey,
+  L.target,
+  L.argument1,
+  L.argument2,
+  L.argument3,
+  L.argument4,
+  L.argument5,
+  L.argument6,
+  L.messageDetails
+FROM ApplicationLogMessages AS L;
+
+CREATE VIEW localized_de_ApplicationChecks AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.environment,
+  L.version,
+  L.process,
+  L.activity,
+  L.function,
+  L."check",
+  L.type_code,
+  L.message,
+  L.statement
+FROM ApplicationChecks AS L;
+
+CREATE VIEW localized_fr_ApplicationChecks AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.environment,
+  L.version,
+  L.process,
+  L.activity,
+  L.function,
+  L."check",
+  L.type_code,
+  L.message,
+  L.statement
+FROM ApplicationChecks AS L;
+
+CREATE VIEW localized_de_RuntimeFunctions AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.environment,
+  L.version,
+  L.process,
+  L.activity,
+  L.function,
+  L.description,
+  L.type_code,
+  L.state_code,
+  L.processingType_code,
+  L.businessEventType_code,
+  L.partition_ID,
+  L.storedProcedure,
+  L.appServerStatement,
+  L.preStatement,
+  L.statement,
+  L.postStatement,
+  L.hanaTable,
+  L.hanaView,
+  L.synonym,
+  L.masterDataHierarchyView,
+  L.calculationView,
+  L.workBook,
+  L.resultModelTable_ID
+FROM RuntimeFunctions AS L;
+
+CREATE VIEW localized_fr_RuntimeFunctions AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.environment,
+  L.version,
+  L.process,
+  L.activity,
+  L.function,
+  L.description,
+  L.type_code,
+  L.state_code,
+  L.processingType_code,
+  L.businessEventType_code,
+  L.partition_ID,
+  L.storedProcedure,
+  L.appServerStatement,
+  L.preStatement,
+  L.statement,
+  L.postStatement,
+  L.hanaTable,
+  L.hanaView,
+  L.synonym,
+  L.masterDataHierarchyView,
+  L.calculationView,
+  L.workBook,
+  L.resultModelTable_ID
+FROM RuntimeFunctions AS L;
+
 CREATE VIEW localized_de_Connections AS SELECT
   L.createdAt,
   L.createdBy,
@@ -11875,6 +13144,54 @@ CREATE VIEW localized_fr_Connections AS SELECT
   L.odataUrl,
   L.odataUrlOptions
 FROM Connections AS L;
+
+CREATE VIEW localized_de_RuntimeFields AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.field,
+  L.environment,
+  L.version,
+  L.class_code,
+  L.type_code,
+  L.hanaDataType_code,
+  L.dataLength,
+  L.dataDecimals,
+  L.unitField_ID,
+  L.isLowercase,
+  L.hasMasterData,
+  L.hasHierarchies,
+  L.calculationHierarchy,
+  L.masterDataHanaView,
+  L.description,
+  L.documentation
+FROM RuntimeFields AS L;
+
+CREATE VIEW localized_fr_RuntimeFields AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.field,
+  L.environment,
+  L.version,
+  L.class_code,
+  L.type_code,
+  L.hanaDataType_code,
+  L.dataLength,
+  L.dataDecimals,
+  L.unitField_ID,
+  L.isLowercase,
+  L.hasMasterData,
+  L.hasHierarchies,
+  L.calculationHierarchy,
+  L.masterDataHanaView,
+  L.description,
+  L.documentation
+FROM RuntimeFields AS L;
 
 CREATE VIEW localized_de_FieldValues AS SELECT
   L.createdAt,
@@ -12846,6 +14163,206 @@ CREATE VIEW localized_fr_CheckFields AS SELECT
   L.field_ID
 FROM CheckFields AS L;
 
+CREATE VIEW localized_de_ApplicationLogStatistics AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.applicationLog_ID,
+  L.function,
+  L.startTimestamp,
+  L.endTimestamp,
+  L.inputRecords,
+  L.resultRecords,
+  L.successRecords,
+  L.warningRecords,
+  L.errorRecords,
+  L.abortRecords,
+  L.inputDuration,
+  L.processingDuration,
+  L.outputDuration
+FROM ApplicationLogStatistics AS L;
+
+CREATE VIEW localized_fr_ApplicationLogStatistics AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.applicationLog_ID,
+  L.function,
+  L.startTimestamp,
+  L.endTimestamp,
+  L.inputRecords,
+  L.resultRecords,
+  L.successRecords,
+  L.warningRecords,
+  L.errorRecords,
+  L.abortRecords,
+  L.inputDuration,
+  L.processingDuration,
+  L.outputDuration
+FROM ApplicationLogStatistics AS L;
+
+CREATE VIEW localized_de_RuntimeShareLocks AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.function_ID,
+  L.environment,
+  L.version,
+  L.process,
+  L.activity,
+  L.partitionField_ID,
+  L.partitionFieldRangeValue
+FROM RuntimeShareLocks AS L;
+
+CREATE VIEW localized_fr_RuntimeShareLocks AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.function_ID,
+  L.environment,
+  L.version,
+  L.process,
+  L.activity,
+  L.partitionField_ID,
+  L.partitionFieldRangeValue
+FROM RuntimeShareLocks AS L;
+
+CREATE VIEW localized_de_RuntimeOutputFields AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.function_ID,
+  L.field_ID
+FROM RuntimeOutputFields AS L;
+
+CREATE VIEW localized_fr_RuntimeOutputFields AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.function_ID,
+  L.field_ID
+FROM RuntimeOutputFields AS L;
+
+CREATE VIEW localized_de_RuntimeProcessChains AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.function_ID,
+  L.level
+FROM RuntimeProcessChains AS L;
+
+CREATE VIEW localized_fr_RuntimeProcessChains AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.function_ID,
+  L.level
+FROM RuntimeProcessChains AS L;
+
+CREATE VIEW localized_de_RuntimeProcessChainFunctions AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.processChain_ID,
+  L.function_ID
+FROM RuntimeProcessChainFunctions AS L;
+
+CREATE VIEW localized_fr_RuntimeProcessChainFunctions AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.processChain_ID,
+  L.function_ID
+FROM RuntimeProcessChainFunctions AS L;
+
+CREATE VIEW localized_de_RuntimeInputFunctions AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.function_ID,
+  L.inputFunction_ID
+FROM RuntimeInputFunctions AS L;
+
+CREATE VIEW localized_fr_RuntimeInputFunctions AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.function_ID,
+  L.inputFunction_ID
+FROM RuntimeInputFunctions AS L;
+
+CREATE VIEW localized_de_RuntimePartitions AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L."partition",
+  L.description,
+  L.field_ID
+FROM RuntimePartitions AS L;
+
+CREATE VIEW localized_fr_RuntimePartitions AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L."partition",
+  L.description,
+  L.field_ID
+FROM RuntimePartitions AS L;
+
+CREATE VIEW localized_de_RuntimePartitionRanges AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.partition_ID,
+  L."range",
+  L.sequence,
+  L.level,
+  L.value
+FROM RuntimePartitionRanges AS L;
+
+CREATE VIEW localized_fr_RuntimePartitionRanges AS SELECT
+  L.createdAt,
+  L.createdBy,
+  L.modifiedAt,
+  L.modifiedBy,
+  L.ID,
+  L.partition_ID,
+  L."range",
+  L.sequence,
+  L.level,
+  L.value
+FROM RuntimePartitionRanges AS L;
+
 CREATE VIEW localized_de_EnvironmentFolders AS SELECT
   Environments_0.createdAt,
   Environments_0.createdBy,
@@ -13626,6 +15143,30 @@ CREATE VIEW localized_fr_ModelingService_JoinTypes AS SELECT
   JoinTypes_0.code
 FROM localized_fr_JoinTypes AS JoinTypes_0;
 
+CREATE VIEW localized_de_ModelingService_ApplicationLogStates AS SELECT
+  ApplicationLogStates_0.name,
+  ApplicationLogStates_0.descr,
+  ApplicationLogStates_0.code
+FROM localized_de_ApplicationLogStates AS ApplicationLogStates_0;
+
+CREATE VIEW localized_fr_ModelingService_ApplicationLogStates AS SELECT
+  ApplicationLogStates_0.name,
+  ApplicationLogStates_0.descr,
+  ApplicationLogStates_0.code
+FROM localized_fr_ApplicationLogStates AS ApplicationLogStates_0;
+
+CREATE VIEW localized_de_ModelingService_RuntimeFunctionStates AS SELECT
+  RuntimeFunctionStates_0.name,
+  RuntimeFunctionStates_0.descr,
+  RuntimeFunctionStates_0.code
+FROM localized_de_RuntimeFunctionStates AS RuntimeFunctionStates_0;
+
+CREATE VIEW localized_fr_ModelingService_RuntimeFunctionStates AS SELECT
+  RuntimeFunctionStates_0.name,
+  RuntimeFunctionStates_0.descr,
+  RuntimeFunctionStates_0.code
+FROM localized_fr_RuntimeFunctionStates AS RuntimeFunctionStates_0;
+
 CREATE VIEW localized_de_ModelingService_ConnectionSources AS SELECT
   ConnectionSources_0.name,
   ConnectionSources_0.descr,
@@ -13878,6 +15419,18 @@ CREATE VIEW localized_fr_ModelingService_QueryFieldScalingFactors AS SELECT
   QueryFieldScalingFactors_0.code
 FROM localized_fr_QueryFieldScalingFactors AS QueryFieldScalingFactors_0;
 
+CREATE VIEW localized_de_ModelingService_ApplicationLogMessageTypes AS SELECT
+  ApplicationLogMessageTypes_0.name,
+  ApplicationLogMessageTypes_0.descr,
+  ApplicationLogMessageTypes_0.code
+FROM localized_de_ApplicationLogMessageTypes AS ApplicationLogMessageTypes_0;
+
+CREATE VIEW localized_fr_ModelingService_ApplicationLogMessageTypes AS SELECT
+  ApplicationLogMessageTypes_0.name,
+  ApplicationLogMessageTypes_0.descr,
+  ApplicationLogMessageTypes_0.code
+FROM localized_fr_ApplicationLogMessageTypes AS ApplicationLogMessageTypes_0;
+
 CREATE VIEW localized_de_ModelingService_Signs AS SELECT
   Signs_0.name,
   Signs_0.descr,
@@ -13949,6 +15502,78 @@ CREATE VIEW localized_fr_ModelingService_JoinRulePredicateComparisons AS SELECT
   JoinRulePredicateComparisons_0.descr,
   JoinRulePredicateComparisons_0.code
 FROM localized_fr_JoinRulePredicateComparisons AS JoinRulePredicateComparisons_0;
+
+CREATE VIEW localized_de_ModelingService_RuntimePartitions AS SELECT
+  RuntimePartitions_0.createdAt,
+  RuntimePartitions_0.createdBy,
+  RuntimePartitions_0.modifiedAt,
+  RuntimePartitions_0.modifiedBy,
+  RuntimePartitions_0.ID,
+  RuntimePartitions_0."partition",
+  RuntimePartitions_0.description,
+  RuntimePartitions_0.field_ID
+FROM localized_de_RuntimePartitions AS RuntimePartitions_0;
+
+CREATE VIEW localized_fr_ModelingService_RuntimePartitions AS SELECT
+  RuntimePartitions_0.createdAt,
+  RuntimePartitions_0.createdBy,
+  RuntimePartitions_0.modifiedAt,
+  RuntimePartitions_0.modifiedBy,
+  RuntimePartitions_0.ID,
+  RuntimePartitions_0."partition",
+  RuntimePartitions_0.description,
+  RuntimePartitions_0.field_ID
+FROM localized_fr_RuntimePartitions AS RuntimePartitions_0;
+
+CREATE VIEW localized_de_ModelingService_RuntimeOutputFields AS SELECT
+  RuntimeOutputFields_0.createdAt,
+  RuntimeOutputFields_0.createdBy,
+  RuntimeOutputFields_0.modifiedAt,
+  RuntimeOutputFields_0.modifiedBy,
+  RuntimeOutputFields_0.ID,
+  RuntimeOutputFields_0.function_ID,
+  RuntimeOutputFields_0.field_ID
+FROM localized_de_RuntimeOutputFields AS RuntimeOutputFields_0;
+
+CREATE VIEW localized_fr_ModelingService_RuntimeOutputFields AS SELECT
+  RuntimeOutputFields_0.createdAt,
+  RuntimeOutputFields_0.createdBy,
+  RuntimeOutputFields_0.modifiedAt,
+  RuntimeOutputFields_0.modifiedBy,
+  RuntimeOutputFields_0.ID,
+  RuntimeOutputFields_0.function_ID,
+  RuntimeOutputFields_0.field_ID
+FROM localized_fr_RuntimeOutputFields AS RuntimeOutputFields_0;
+
+CREATE VIEW localized_de_ModelingService_RuntimeShareLocks AS SELECT
+  RuntimeShareLocks_0.createdAt,
+  RuntimeShareLocks_0.createdBy,
+  RuntimeShareLocks_0.modifiedAt,
+  RuntimeShareLocks_0.modifiedBy,
+  RuntimeShareLocks_0.ID,
+  RuntimeShareLocks_0.function_ID,
+  RuntimeShareLocks_0.environment,
+  RuntimeShareLocks_0.version,
+  RuntimeShareLocks_0.process,
+  RuntimeShareLocks_0.activity,
+  RuntimeShareLocks_0.partitionField_ID,
+  RuntimeShareLocks_0.partitionFieldRangeValue
+FROM localized_de_RuntimeShareLocks AS RuntimeShareLocks_0;
+
+CREATE VIEW localized_fr_ModelingService_RuntimeShareLocks AS SELECT
+  RuntimeShareLocks_0.createdAt,
+  RuntimeShareLocks_0.createdBy,
+  RuntimeShareLocks_0.modifiedAt,
+  RuntimeShareLocks_0.modifiedBy,
+  RuntimeShareLocks_0.ID,
+  RuntimeShareLocks_0.function_ID,
+  RuntimeShareLocks_0.environment,
+  RuntimeShareLocks_0.version,
+  RuntimeShareLocks_0.process,
+  RuntimeShareLocks_0.activity,
+  RuntimeShareLocks_0.partitionField_ID,
+  RuntimeShareLocks_0.partitionFieldRangeValue
+FROM localized_fr_RuntimeShareLocks AS RuntimeShareLocks_0;
 
 CREATE VIEW localized_de_ModelingService_Environments AS SELECT
   environments_0.createdAt,
@@ -14078,6 +15703,68 @@ CREATE VIEW localized_fr_ModelingService_Functions AS SELECT
   functions_0.documentation
 FROM localized_fr_Functions AS functions_0;
 
+CREATE VIEW localized_de_ModelingService_RuntimeFunctions AS SELECT
+  runtimeFunctions_0.createdAt,
+  runtimeFunctions_0.createdBy,
+  runtimeFunctions_0.modifiedAt,
+  runtimeFunctions_0.modifiedBy,
+  runtimeFunctions_0.ID,
+  runtimeFunctions_0.environment,
+  runtimeFunctions_0.version,
+  runtimeFunctions_0.process,
+  runtimeFunctions_0.activity,
+  runtimeFunctions_0.function,
+  runtimeFunctions_0.description,
+  runtimeFunctions_0.type_code,
+  runtimeFunctions_0.state_code,
+  runtimeFunctions_0.processingType_code,
+  runtimeFunctions_0.businessEventType_code,
+  runtimeFunctions_0.partition_ID,
+  runtimeFunctions_0.storedProcedure,
+  runtimeFunctions_0.appServerStatement,
+  runtimeFunctions_0.preStatement,
+  runtimeFunctions_0.statement,
+  runtimeFunctions_0.postStatement,
+  runtimeFunctions_0.hanaTable,
+  runtimeFunctions_0.hanaView,
+  runtimeFunctions_0.synonym,
+  runtimeFunctions_0.masterDataHierarchyView,
+  runtimeFunctions_0.calculationView,
+  runtimeFunctions_0.workBook,
+  runtimeFunctions_0.resultModelTable_ID
+FROM localized_de_RuntimeFunctions AS runtimeFunctions_0;
+
+CREATE VIEW localized_fr_ModelingService_RuntimeFunctions AS SELECT
+  runtimeFunctions_0.createdAt,
+  runtimeFunctions_0.createdBy,
+  runtimeFunctions_0.modifiedAt,
+  runtimeFunctions_0.modifiedBy,
+  runtimeFunctions_0.ID,
+  runtimeFunctions_0.environment,
+  runtimeFunctions_0.version,
+  runtimeFunctions_0.process,
+  runtimeFunctions_0.activity,
+  runtimeFunctions_0.function,
+  runtimeFunctions_0.description,
+  runtimeFunctions_0.type_code,
+  runtimeFunctions_0.state_code,
+  runtimeFunctions_0.processingType_code,
+  runtimeFunctions_0.businessEventType_code,
+  runtimeFunctions_0.partition_ID,
+  runtimeFunctions_0.storedProcedure,
+  runtimeFunctions_0.appServerStatement,
+  runtimeFunctions_0.preStatement,
+  runtimeFunctions_0.statement,
+  runtimeFunctions_0.postStatement,
+  runtimeFunctions_0.hanaTable,
+  runtimeFunctions_0.hanaView,
+  runtimeFunctions_0.synonym,
+  runtimeFunctions_0.masterDataHierarchyView,
+  runtimeFunctions_0.calculationView,
+  runtimeFunctions_0.workBook,
+  runtimeFunctions_0.resultModelTable_ID
+FROM localized_fr_RuntimeFunctions AS runtimeFunctions_0;
+
 CREATE VIEW localized_de_ModelingService_Allocations AS SELECT
   allocations_0.createdAt,
   allocations_0.createdBy,
@@ -14202,7 +15889,9 @@ CREATE VIEW localized_de_ModelingService_Derivations AS SELECT
   derivations_0.partition_ID,
   derivations_0.inputFunction_ID,
   derivations_0.ID,
-  derivations_0.type_code
+  derivations_0.type_code,
+  derivations_0.suppressInitialResults,
+  derivations_0.ensureDistinctResults
 FROM localized_de_Derivations AS derivations_0;
 
 CREATE VIEW localized_fr_ModelingService_Derivations AS SELECT
@@ -14221,7 +15910,9 @@ CREATE VIEW localized_fr_ModelingService_Derivations AS SELECT
   derivations_0.partition_ID,
   derivations_0.inputFunction_ID,
   derivations_0.ID,
-  derivations_0.type_code
+  derivations_0.type_code,
+  derivations_0.suppressInitialResults,
+  derivations_0.ensureDistinctResults
 FROM localized_fr_Derivations AS derivations_0;
 
 CREATE VIEW localized_de_ModelingService_Joins AS SELECT
@@ -14287,6 +15978,54 @@ CREATE VIEW localized_fr_ModelingService_ModelTables AS SELECT
   modelTables_0.transportData,
   modelTables_0.connection
 FROM localized_fr_ModelTables AS modelTables_0;
+
+CREATE VIEW localized_de_ModelingService_ApplicationLogs AS SELECT
+  applicationLogs_0.createdAt,
+  applicationLogs_0.createdBy,
+  applicationLogs_0.modifiedAt,
+  applicationLogs_0.modifiedBy,
+  applicationLogs_0.ID,
+  applicationLogs_0.run,
+  applicationLogs_0.type,
+  applicationLogs_0.environment,
+  applicationLogs_0.version,
+  applicationLogs_0.process,
+  applicationLogs_0.activity,
+  applicationLogs_0.mainFunction,
+  applicationLogs_0.parameters,
+  applicationLogs_0.selections,
+  applicationLogs_0.businessEvent,
+  applicationLogs_0.field,
+  applicationLogs_0."check",
+  applicationLogs_0.conversion,
+  applicationLogs_0."partition",
+  applicationLogs_0.package,
+  applicationLogs_0.state_code
+FROM localized_de_ApplicationLogs AS applicationLogs_0;
+
+CREATE VIEW localized_fr_ModelingService_ApplicationLogs AS SELECT
+  applicationLogs_0.createdAt,
+  applicationLogs_0.createdBy,
+  applicationLogs_0.modifiedAt,
+  applicationLogs_0.modifiedBy,
+  applicationLogs_0.ID,
+  applicationLogs_0.run,
+  applicationLogs_0.type,
+  applicationLogs_0.environment,
+  applicationLogs_0.version,
+  applicationLogs_0.process,
+  applicationLogs_0.activity,
+  applicationLogs_0.mainFunction,
+  applicationLogs_0.parameters,
+  applicationLogs_0.selections,
+  applicationLogs_0.businessEvent,
+  applicationLogs_0.field,
+  applicationLogs_0."check",
+  applicationLogs_0.conversion,
+  applicationLogs_0."partition",
+  applicationLogs_0.package,
+  applicationLogs_0.state_code
+FROM localized_fr_ApplicationLogs AS applicationLogs_0;
 
 CREATE VIEW localized_de_ModelingService_Connections AS SELECT
   Connections_0.createdAt,
@@ -14693,6 +16432,50 @@ CREATE VIEW localized_fr_ModelingService_QueryComponents AS SELECT
   QueryComponents_0.formula,
   QueryComponents_0.keyfigure_ID
 FROM localized_fr_QueryComponents AS QueryComponents_0;
+
+CREATE VIEW localized_de_ModelingService_ApplicationLogMessages AS SELECT
+  ApplicationLogMessages_0.createdAt,
+  ApplicationLogMessages_0.createdBy,
+  ApplicationLogMessages_0.modifiedAt,
+  ApplicationLogMessages_0.modifiedBy,
+  ApplicationLogMessages_0.ID,
+  ApplicationLogMessages_0.applicationLog_ID,
+  ApplicationLogMessages_0.type_code,
+  ApplicationLogMessages_0.function,
+  ApplicationLogMessages_0.code,
+  ApplicationLogMessages_0.entity,
+  ApplicationLogMessages_0.primaryKey,
+  ApplicationLogMessages_0.target,
+  ApplicationLogMessages_0.argument1,
+  ApplicationLogMessages_0.argument2,
+  ApplicationLogMessages_0.argument3,
+  ApplicationLogMessages_0.argument4,
+  ApplicationLogMessages_0.argument5,
+  ApplicationLogMessages_0.argument6,
+  ApplicationLogMessages_0.messageDetails
+FROM localized_de_ApplicationLogMessages AS ApplicationLogMessages_0;
+
+CREATE VIEW localized_fr_ModelingService_ApplicationLogMessages AS SELECT
+  ApplicationLogMessages_0.createdAt,
+  ApplicationLogMessages_0.createdBy,
+  ApplicationLogMessages_0.modifiedAt,
+  ApplicationLogMessages_0.modifiedBy,
+  ApplicationLogMessages_0.ID,
+  ApplicationLogMessages_0.applicationLog_ID,
+  ApplicationLogMessages_0.type_code,
+  ApplicationLogMessages_0.function,
+  ApplicationLogMessages_0.code,
+  ApplicationLogMessages_0.entity,
+  ApplicationLogMessages_0.primaryKey,
+  ApplicationLogMessages_0.target,
+  ApplicationLogMessages_0.argument1,
+  ApplicationLogMessages_0.argument2,
+  ApplicationLogMessages_0.argument3,
+  ApplicationLogMessages_0.argument4,
+  ApplicationLogMessages_0.argument5,
+  ApplicationLogMessages_0.argument6,
+  ApplicationLogMessages_0.messageDetails
+FROM localized_fr_ApplicationLogMessages AS ApplicationLogMessages_0;
 
 CREATE VIEW localized_de_ModelingService_CheckSelections AS SELECT
   CheckSelections_0.createdAt,
@@ -15147,6 +16930,32 @@ CREATE VIEW localized_fr_ModelingService_JoinRulePredicates AS SELECT
   JoinRulePredicates_0.joinField_ID,
   JoinRulePredicates_0.sequence
 FROM localized_fr_JoinRulePredicates AS JoinRulePredicates_0;
+
+CREATE VIEW localized_de_ModelingService_RuntimePartitionRanges AS SELECT
+  RuntimePartitionRanges_0.createdAt,
+  RuntimePartitionRanges_0.createdBy,
+  RuntimePartitionRanges_0.modifiedAt,
+  RuntimePartitionRanges_0.modifiedBy,
+  RuntimePartitionRanges_0.ID,
+  RuntimePartitionRanges_0.partition_ID,
+  RuntimePartitionRanges_0."range",
+  RuntimePartitionRanges_0.sequence,
+  RuntimePartitionRanges_0.level,
+  RuntimePartitionRanges_0.value
+FROM localized_de_RuntimePartitionRanges AS RuntimePartitionRanges_0;
+
+CREATE VIEW localized_fr_ModelingService_RuntimePartitionRanges AS SELECT
+  RuntimePartitionRanges_0.createdAt,
+  RuntimePartitionRanges_0.createdBy,
+  RuntimePartitionRanges_0.modifiedAt,
+  RuntimePartitionRanges_0.modifiedBy,
+  RuntimePartitionRanges_0.ID,
+  RuntimePartitionRanges_0.partition_ID,
+  RuntimePartitionRanges_0."range",
+  RuntimePartitionRanges_0.sequence,
+  RuntimePartitionRanges_0.level,
+  RuntimePartitionRanges_0.value
+FROM localized_fr_RuntimePartitionRanges AS RuntimePartitionRanges_0;
 
 CREATE VIEW localized_de_ModelingService_CurrencyConversions AS SELECT
   currencyConversions_0.createdAt,
@@ -16031,6 +17840,108 @@ CREATE VIEW localized_fr_ModelingService_CheckFields AS SELECT
   CheckFields_0.check_ID,
   CheckFields_0.field_ID
 FROM localized_fr_CheckFields AS CheckFields_0;
+
+CREATE VIEW localized_de_ModelingService_RuntimeProcessChains AS SELECT
+  RuntimeProcessChains_0.createdAt,
+  RuntimeProcessChains_0.createdBy,
+  RuntimeProcessChains_0.modifiedAt,
+  RuntimeProcessChains_0.modifiedBy,
+  RuntimeProcessChains_0.ID,
+  RuntimeProcessChains_0.function_ID,
+  RuntimeProcessChains_0.level
+FROM localized_de_RuntimeProcessChains AS RuntimeProcessChains_0;
+
+CREATE VIEW localized_fr_ModelingService_RuntimeProcessChains AS SELECT
+  RuntimeProcessChains_0.createdAt,
+  RuntimeProcessChains_0.createdBy,
+  RuntimeProcessChains_0.modifiedAt,
+  RuntimeProcessChains_0.modifiedBy,
+  RuntimeProcessChains_0.ID,
+  RuntimeProcessChains_0.function_ID,
+  RuntimeProcessChains_0.level
+FROM localized_fr_RuntimeProcessChains AS RuntimeProcessChains_0;
+
+CREATE VIEW localized_de_ModelingService_RuntimeInputFunctions AS SELECT
+  RuntimeInputFunctions_0.createdAt,
+  RuntimeInputFunctions_0.createdBy,
+  RuntimeInputFunctions_0.modifiedAt,
+  RuntimeInputFunctions_0.modifiedBy,
+  RuntimeInputFunctions_0.ID,
+  RuntimeInputFunctions_0.function_ID,
+  RuntimeInputFunctions_0.inputFunction_ID
+FROM localized_de_RuntimeInputFunctions AS RuntimeInputFunctions_0;
+
+CREATE VIEW localized_fr_ModelingService_RuntimeInputFunctions AS SELECT
+  RuntimeInputFunctions_0.createdAt,
+  RuntimeInputFunctions_0.createdBy,
+  RuntimeInputFunctions_0.modifiedAt,
+  RuntimeInputFunctions_0.modifiedBy,
+  RuntimeInputFunctions_0.ID,
+  RuntimeInputFunctions_0.function_ID,
+  RuntimeInputFunctions_0.inputFunction_ID
+FROM localized_fr_RuntimeInputFunctions AS RuntimeInputFunctions_0;
+
+CREATE VIEW localized_de_ModelingService_RuntimeProcessChainFunctions AS SELECT
+  RuntimeProcessChainFunctions_0.createdAt,
+  RuntimeProcessChainFunctions_0.createdBy,
+  RuntimeProcessChainFunctions_0.modifiedAt,
+  RuntimeProcessChainFunctions_0.modifiedBy,
+  RuntimeProcessChainFunctions_0.ID,
+  RuntimeProcessChainFunctions_0.processChain_ID,
+  RuntimeProcessChainFunctions_0.function_ID
+FROM localized_de_RuntimeProcessChainFunctions AS RuntimeProcessChainFunctions_0;
+
+CREATE VIEW localized_fr_ModelingService_RuntimeProcessChainFunctions AS SELECT
+  RuntimeProcessChainFunctions_0.createdAt,
+  RuntimeProcessChainFunctions_0.createdBy,
+  RuntimeProcessChainFunctions_0.modifiedAt,
+  RuntimeProcessChainFunctions_0.modifiedBy,
+  RuntimeProcessChainFunctions_0.ID,
+  RuntimeProcessChainFunctions_0.processChain_ID,
+  RuntimeProcessChainFunctions_0.function_ID
+FROM localized_fr_RuntimeProcessChainFunctions AS RuntimeProcessChainFunctions_0;
+
+CREATE VIEW localized_de_ModelingService_ApplicationLogStatistics AS SELECT
+  ApplicationLogStatistics_0.createdAt,
+  ApplicationLogStatistics_0.createdBy,
+  ApplicationLogStatistics_0.modifiedAt,
+  ApplicationLogStatistics_0.modifiedBy,
+  ApplicationLogStatistics_0.ID,
+  ApplicationLogStatistics_0.applicationLog_ID,
+  ApplicationLogStatistics_0.function,
+  ApplicationLogStatistics_0.startTimestamp,
+  ApplicationLogStatistics_0.endTimestamp,
+  ApplicationLogStatistics_0.inputRecords,
+  ApplicationLogStatistics_0.resultRecords,
+  ApplicationLogStatistics_0.successRecords,
+  ApplicationLogStatistics_0.warningRecords,
+  ApplicationLogStatistics_0.errorRecords,
+  ApplicationLogStatistics_0.abortRecords,
+  ApplicationLogStatistics_0.inputDuration,
+  ApplicationLogStatistics_0.processingDuration,
+  ApplicationLogStatistics_0.outputDuration
+FROM localized_de_ApplicationLogStatistics AS ApplicationLogStatistics_0;
+
+CREATE VIEW localized_fr_ModelingService_ApplicationLogStatistics AS SELECT
+  ApplicationLogStatistics_0.createdAt,
+  ApplicationLogStatistics_0.createdBy,
+  ApplicationLogStatistics_0.modifiedAt,
+  ApplicationLogStatistics_0.modifiedBy,
+  ApplicationLogStatistics_0.ID,
+  ApplicationLogStatistics_0.applicationLog_ID,
+  ApplicationLogStatistics_0.function,
+  ApplicationLogStatistics_0.startTimestamp,
+  ApplicationLogStatistics_0.endTimestamp,
+  ApplicationLogStatistics_0.inputRecords,
+  ApplicationLogStatistics_0.resultRecords,
+  ApplicationLogStatistics_0.successRecords,
+  ApplicationLogStatistics_0.warningRecords,
+  ApplicationLogStatistics_0.errorRecords,
+  ApplicationLogStatistics_0.abortRecords,
+  ApplicationLogStatistics_0.inputDuration,
+  ApplicationLogStatistics_0.processingDuration,
+  ApplicationLogStatistics_0.outputDuration
+FROM localized_fr_ApplicationLogStatistics AS ApplicationLogStatistics_0;
 
 CREATE VIEW localized_de_ModelingService_EnvironmentFolders AS SELECT
   EnvironmentFolders_0.createdAt,
