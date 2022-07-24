@@ -65,8 +65,4 @@ service ModelingService {
 
     @odata.draft.enabled
     entity Queries             as projection on queries;
-
-    entity ApplicationLogs as projection on applicationLogs;
-
-    entity RuntimeFunctions as projection on runtimeFunctions;
 }

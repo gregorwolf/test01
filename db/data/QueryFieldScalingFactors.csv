@@ -1,11 +1,11 @@
 CODE;NAME;DESCR
-0;Divide by 1
-1;Divide by 10
-2;Divide by 100
-3;Divide by 1000
-4;Divide by 10000
-5;Divide by 100000
-6;Divide by 1000000
-7;Divide by 10000000
-8;Divide by 100000000
-9;Divide by 1000000000
+0;Divide by 1;Divide by 1
+1;Divide by 10;Divide by 10
+2;Divide by 100;Divide by 100
+3;Divide by 1000;Divide by 1000
+4;Divide by 10000;Divide by 10000
+5;Divide by 100000;Divide by 100000
+6;Divide by 1000000;Divide by 1000000
+7;Divide by 10000000;Divide by 10000000
+8;Divide by 100000000;Divide by 100000000
+9;Divide by 1000000000;Divide by 1000000000

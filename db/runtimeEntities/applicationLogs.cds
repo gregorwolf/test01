@@ -25,6 +25,7 @@ using {
     field,
     formulaGroupOrder,
     selection,
+    formula,
 } from '../commonAspects';
 
 using {CheckCategories} from '../checks';
@@ -39,7 +40,7 @@ using {
 } from '@sap/cds/common';
 
 entity ApplicationLogs : managed {
-    key ID            : GUID                                     @UI.Hidden : false;
+    key ID            : GUID                                    @UI.Hidden : false;
         run           : Run;
         type          : ApplicationLogType;
         environment   : Environment;
@@ -47,24 +48,22 @@ entity ApplicationLogs : managed {
         process       : Process;
         activity      : Activity;
         mainFunction  : MainFunction;
-        parameters    : Parameters;
-        selections    : Selections;
         businessEvent : BusinessEvent;
         field         : Field;
         check         : Check;
         conversion    : Conversion;
         partition     : Partition;
         package       : Package;
-        state         : Association to one ApplicationLogStates  @title     : 'State';
+        state         : Association to one ApplicationLogStates @title     : 'State';
         messages      : Composition of many ApplicationLogMessages
-                            on messages.applicationLog = $self   @title     : 'Messages';
+                            on messages.log = $self             @title     : 'Messages';
         statistics    : Composition of many ApplicationLogStatistics
-                            on statistics.applicationLog = $self @title     : 'Statistics';
+                            on statistics.log = $self           @title     : 'Statistics';
 }
 
 entity ApplicationLogStatistics : managed {
     key ID                 : GUID                               @UI.Hidden : false;
-        applicationLog     : Association to one ApplicationLogs @title     : 'Log';
+        log                : Association to one ApplicationLogs @title     : 'Log';
         function           : Function;
         startTimestamp     : StartTimestamp;
         endTimestamp       : EndTimestamp;
@@ -94,7 +93,7 @@ type OutputDuration : Decimal @title : 'Output Writing Duration (s)';
 
 entity ApplicationLogMessages : managed {
     key ID             : GUID                                          @UI.Hidden : false;
-        applicationLog : Association to one ApplicationLogs            @title     : 'Log';
+        log            : Association to one ApplicationLogs            @title     : 'Log';
         type           : Association to one ApplicationLogMessageTypes @title     : 'Type';
         function       : Function;
         code           : MessageCode; // e.g. "ENVTYPE_CHANGE_NOT_ALLOWED", if this is given the message will be translated including args
@@ -110,8 +109,9 @@ entity ApplicationLogMessages : managed {
         messageDetails : MessageDetails;
 }
 
-entity ApplicationChecks : managed {
+entity ApplicationLogChecks : managed {
     key ID          : GUID                                          @UI.Hidden : false;
+        log         : Association to one ApplicationLogs            @title     : 'Log';
         environment : Environment;
         version     : Version;
         process     : Process;
@@ -124,23 +124,28 @@ entity ApplicationChecks : managed {
         statement   : Statement;
 }
 
-// entity ApplicationFields : managed, formulaGroupOrder {
-//     key ID          : GUID @UI.Hidden : false;
-//         environment : Environment;
-//         version     : Version;
-//         process     : Process;
-//         activity    : Activity;
-//         sField      : SField;
-//         field       : Field;
-//         step        : Step;
-//         selections  : Composition of many ApplicationFieldSelections
-//                           on selections.applicationField = $self;
-// }
+entity ApplicationLogFields : managed, formula {
+    key ID          : GUID                               @UI.Hidden : false;
+        log         : Association to one ApplicationLogs @title     : 'Log';
+        environment : Environment;
+        version     : Version;
+        process     : Process;
+        activity    : Activity;
+        field       : Field;
+        selections  : Composition of many ApplicationLogFieldSelections
+                          on selections.logField = $self;
+}
 
-// entity ApplicationFieldSelections : managed, selection {
-//     key ID               : GUID @UI.Hidden : false;
-//         applicationField : Association to one ApplicationFields;
-// }
+entity ApplicationLogFieldSelections : managed, selection {
+    key ID          : GUID                               @UI.Hidden : false;
+        log         : Association to one ApplicationLogs @title     : 'Log';
+        logField    : Association to one ApplicationLogFields;
+        environment : Environment;
+        version     : Version;
+        process     : Process;
+        activity    : Activity;
+        field       : Field;
+}
 
 type MessageDetails : LargeString @title : 'Message Details';
 type Argument1 : String @title : 'Argument 1';
@@ -158,11 +163,11 @@ type Selections : LargeString @title : 'Selections';
 type ApplicationLogType : String @title : 'Type';
 
 type ApplicationLogState @(assert.range) : String(10) enum {
-    Running = 'Running';
+    Running = 'RUNNING';
     OK      = 'OK';
-    Warning = 'Warning';
-    Error   = 'Error';
-    Abort   = 'Abort';
+    Warning = 'WARNING';
+    Error   = 'ERROR';
+    Abort   = 'ABORT';
 }
 
 entity ApplicationLogStates : CodeList {
@@ -170,7 +175,6 @@ entity ApplicationLogStates : CodeList {
 }
 
 type ApplicationLogMessageType @(assert.range) : String(10) enum {
-    Info    = 'I';
     Status  = 'S';
     Warning = 'W';
     Error   = 'E';

@@ -1,0 +1,8 @@
+library SXP0012 as begin
+
+public procedure readMainRuntimeFunction(in applicationLogId nvarchar(36), out runtimeFunction RuntimeFunctions ) as begin
+  runtimeFunction = select R.* from runtimeFunctions as R 
+  inner join applicationLogs as A on R.environment = A.environment and R.version = A.version and R.function = A.mainfunction and A.ID = :applicationLogId;  
+end;
+
+end;

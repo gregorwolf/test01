@@ -19,21 +19,16 @@ using {
 } from '@sap/cds/common';
 
 @assert.unique : {
-    fieldname        : [
-        environment,
-        field
-    ],
-    fieldDescription : [
-        environment,
-        description,
-    ]
+    teamsName        : [name],
+    teamsDescription : [description]
 }
 entity Teams : managed {
     key ID          : GUID;
         name        : Name;
         description : Description;
         obsolete    : Obsolete;
-        users       : Composition of many TeamUsers;
+        users       : Composition of many TeamUsers
+                          on users.team = $self;
 }
 
 entity TeamUsers : managed {

@@ -115,9 +115,9 @@ aspect formulaGroupOrder : formulaGroup {
 }
 
 aspect selection : {
-  seq  : Sequence default 0;
-  sign : Association to one Signs   @title : 'Sign'  @mandatory;
-  opt  : Association to one Options @title : 'Option'  @mandatory;
-  low  : String                     @title : 'Value';
-  high : String                     @title : 'High Value';
+  sequence : Sequence default 0;
+  sign     : Association to one Signs   @title : 'Sign'  @mandatory;
+  option   : Association to one Options @title : 'Option'  @mandatory;
+  low      : String                     @title : 'Value';
+  high     : String                     @title : 'High Value';
 }

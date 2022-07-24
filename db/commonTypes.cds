@@ -42,7 +42,10 @@ type StartDate : String @title : 'Start Date';
 type DueDate : String @title : 'Due Date';
 type Url : String @title : 'URL';
 type Formula : String @title : 'Formula';
-type Name: String @title: 'Name';
+type Name : String @title : 'Name';
+type File : LargeBinary @title : 'File';
+type Comment : LargeString @title : 'Comment';
+
 type MessageType @(assert.range) : String(1) @title : 'Message type' enum {
     Info    = 'I';
     Success = 'S';

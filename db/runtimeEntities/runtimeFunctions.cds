@@ -43,9 +43,11 @@ using {
 
 using {Workbook} from '../calculations';
 using {RuntimeFields} from './RuntimeFields';
+using {ApplicationLogs} from './applicationLogs';
 
 entity RuntimeFunctions : managed {
     key ID                      : GUID;
+        log_ID                  : GUID;
         environment             : Environment;
         version                 : Version;
         process                 : Process;
@@ -77,6 +79,8 @@ entity RuntimeFunctions : managed {
                                       on outputFields.function = $self          @title : 'Output Fields';
         shareLocks              : Composition of many RuntimeShareLocks
                                       on shareLocks.function = $self            @title : 'Share Locks';
+        log                     : Association to one ApplicationLogs
+                                      on log.ID = log_ID;
 }
 
 // todo use select.forShareLock() to block parallel calls of same activity or function or partitionFieldRangeValue
@@ -93,11 +97,11 @@ entity RuntimeShareLocks : managed {
 
 // This entity needs to be filled automatically during generation for the activated function and potentially all subsequent activated functions
 entity RuntimeOutputFields : managed {
-    key ID       : GUID;
-        environment              : Environment;
-        version                  : Version;
-        function : Association to one RuntimeFunctions;
-        field    : Field;
+    key ID          : GUID;
+        environment : Environment;
+        version     : Version;
+        function    : Association to one RuntimeFunctions;
+        field       : Field;
 }
 
 entity RuntimeProcessChains : managed {

@@ -1,0 +1,7 @@
+{
+  "VIEW_COLUMNS" : {
+    "target": {
+      "object" : "PUBLIC.VIEW_COLUMNS"
+    }
+  }
+}

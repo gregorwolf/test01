@@ -1,0 +1,115 @@
+library BASICS as begin
+
+public procedure readMainRuntimeFunction(in applicationLogId nvarchar(36), out runtimeFunction RuntimeFunctions ) as begin
+  runtimeFunction = select R.* from runtimeFunctions as R 
+  inner join applicationLogs as A on R.environment = A.environment and R.version = A.version and R.function = A.mainfunction and A.ID = :applicationLogId;  
+end;
+
+public procedure readRuntimeFunction(in applicationLogId nvarchar(36), in function nvarchar(5), out runtimeFunction RuntimeFunctions, out applicationLog ApplicationLogs) as begin
+  applicationLog = select R.* from ApplicationLogs as R where ID = :applicationLogId;
+  runtimeFunction = select R.* from runtimeFunctions as R 
+  inner join ApplicationLogs as A on R.environment = A.environment and R.version = A.version and R.function = :function and A.ID = :applicationLogId;  
+end;
+
+
+public procedure readDynamicWhereExpression(in applicationLogId nvarchar(36), in name nvarchar(5000), out sqlExpression nvarchar(5000)) as begin
+
+  select string_agg('(' || sqlExpression || ')', ' AND ') as sqlExpression into sqlExpression from (
+    select string_agg('(' || sqlExpression || ')', ' AND NOT ') as sqlExpression, field from (
+      select string_agg('(' || sqlExpression || ')', ' OR ') as sqlExpression, field, sign_code from (
+        SELECT 
+        case 
+          when option_code = 'EQ' then '"' || field || '"=''' || low || '''' 
+          when option_code = 'BT' then '"' || field || '" BETWEEN ''' || low || ''' AND ''' || high || '''' 
+        end as sqlExpression, * 
+        from (
+          select S.field, S.sign_code, S.option_code, S.low, S.high FROM TABLE_COLUMNS as C
+          inner join ApplicationLogFieldSelections as S on S.field = C.column_name
+          WHERE SCHEMA_NAME = CURRENT_SCHEMA AND TABLE_NAME = :name and log_ID = :applicationLogId
+          union all 
+          select S.field, S.sign_code, S.option_code, S.low, S.high FROM VIEW_COLUMNS as C
+          inner join ApplicationLogFieldSelections as S on S.field = C.column_name
+          WHERE SCHEMA_NAME = CURRENT_SCHEMA AND VIEW_NAME = :name and log_ID = :applicationLogId
+        )
+      )  group by field, sign_code order by sign_code desc
+    ) group by field order by field
+  );
+  if sqlExpression is null then sqlExpression = ''; end if;
+end;
+
+public procedure readRuntimeFunctionWhereExpression(in applicationLogId nvarchar(36), in function nvarchar(5), out sqlExpression nvarchar(5000), out runtimeFunction RuntimeFunctions) as begin
+  declare applicationLog ApplicationLogs;
+  call readRuntimeFunction(applicationLogId, function, runtimeFunction, applicationLog);
+  begin
+    declare hanaTable nvarchar(5000) default :runtimeFunction.hanaTable[1];
+    declare hanaView nvarchar(5000) default :runtimeFunction.hanaView[1];
+    declare synonym nvarchar(5000) default :runtimeFunction.synonym[1];
+    declare hanaName nvarchar(5000) default coalesce(hanaTable, hanaView, synonym);
+    call readDynamicWhereExpression(applicationLogId, hanaName, sqlExpression);
+  end;
+end;
+
+
+public procedure getDynamicDeleteStatement(in applicationLogId nvarchar(5000), in runtimeFunction RuntimeFunctions, in tableVariable nvarchar(5000), out sqlExpression nclob) as begin
+  declare hanaName nvarchar(5000) default :runtimeFunction.hanaTable[1];
+  call readDynamicWhereExpression(applicationLogId, hanaName, sqlExpression);
+  if length(sqlExpression) > 0 then 
+    sqlExpression = ' WHERE ' || sqlExpression; 
+  end if;
+  sqlExpression = 'DELETE FROM ' || hanaName || ' AS _M' || sqlExpression;
+end;
+
+
+public procedure createStatistics(in applicationLogId nvarchar(36), in function nvarchar(5), out ID nvarchar(36) ) as begin
+  declare mainFunction_Id nvarchar(36);
+  Statistics = select ID from ApplicationLogStatistics where log_ID = :applicationLogId and function = :function;
+  begin autonomous transaction 
+    if record_count(:statistics) = 0 then
+      ID = newUID();
+    	insert into ApplicationLogStatistics (ID, log_ID, function, startTimestamp) values (ID, applicationlogId, function, CURRENT_UTCTIMESTAMP);
+    else 
+      ID = :Statistics.ID[1];
+    end if;
+  end;
+end;
+
+public procedure updateInputStatistics(in statisticsId nvarchar(36), in inputRecords bigint) as begin
+  begin autonomous transaction 
+    update ApplicationLogStatistics set inputRecords = inputRecords, inputDuration = NANO100_BETWEEN(startTimestamp, current_utctimestamp)/10000000 WHERE ID = statisticsId; 
+  end;
+end;
+
+public procedure updateProcessStatistics(in statisticsId nvarchar(36), in essences table (_state NVARCHAR(5000)), out errorRecords bigint, out abortRecords bigint ) as begin
+  begin autonomous transaction
+    declare ts timestamp default current_utctimestamp;
+    declare resultRecords bigint default RECORD_COUNT(:essences);
+    declare successRecords bigint;
+    declare warningRecords bigint;
+    select count(*) into successRecords from :essences where _state like 'S=%' or _state = '' or _state is null;
+    select count(*) into warningRecords from :essences where _state like 'W=%';
+    select count(*) into errorRecords from :essences where _state like 'E=%';
+    select count (*) into abortRecords from :essences where _state like 'A=%';
+    update ApplicationLogStatistics set resultRecords = resultRecords, successRecords = successRecords, warningRecords = warningRecords, errorRecords = errorRecords, abortRecords = abortRecords, processingDuration = NANO100_BETWEEN(startTimestamp, ts)/10000000 - ifNull(inputDuration, 0) where ID = statisticsId;
+  end;
+end;
+
+public procedure closeStatistics(in statisticsId nvarchar(36)) as begin
+  begin autonomous transaction
+    declare ts timestamp default current_utctimestamp;
+    update ApplicationLogStatistics set endTimestamp = ts, outputDuration = nano100_between(startTimestamp, ts)/10000000  - ifNull(inputDuration, 0) - ifNull(processingDuration, 0) where ID = statisticsId;
+  end;
+end;
+
+public procedure getFunctionTree(in runtimeFunction_ID nvarchar(36), out functionChains table (HIERARCHY_RANK bigint, HIERARCHY_TREE_SIZE bigint, HIERARCHY_PARENT_RANK bigint, HIERARCHY_ROOT_RANK bigint, HIERARCHY_LEVEL bigint, HIERARCHY_IS_CYCLE bigint, HIERARCHY_IS_ORPHAN bigint, NODE_ID NVARCHAR(36), PARENT_ID NVARCHAR(36), function NVARCHAR(5), processingType_Code nvarchar(10), isActivity boolean)) as begin
+  functionChains = select * from hierarchy_spantree( source( 
+    SELECT * FROM (
+      SELECT F.ID as NODE_ID, P.function_ID as PARENT_ID, F.function, F.processingType_code,
+      CASE WHEN exists(SELECT * from CuProcessActivities as A where A.function_ID = F.ID) THEN TRUE ELSE FALSE END as IsActivity 
+      from RuntimeFunctions as F 
+  	  left outer join RuntimeInputFunctions as P on P.inputFunction_ID = F.ID
+    ) where node_ID = :runtimeFunction_ID or IsActivity = false
+  ) start where NODE_ID = :runtimeFunction_ID sibling order by function);
+end;
+
+
+end;

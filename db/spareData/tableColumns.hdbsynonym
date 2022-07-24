@@ -1,0 +1,7 @@
+{
+  "TABLE_COLUMNS" : {
+    "target": {
+      "object" : "PUBLIC.TABLE_COLUMNS"
+    }
+  }
+}
